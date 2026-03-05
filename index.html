@@ -201,6 +201,18 @@ body { font-family: 'Segoe UI','Apple SD Gothic Neo',sans-serif; background:var(
 .gen-result img { transition:transform .3s; cursor:pointer; }
 .gen-result img:hover { transform:scale(1.02); }
 
+/* File Upload */
+.file-upload-area { border:2px dashed var(--border); border-radius:8px; padding:16px; text-align:center; cursor:pointer; transition:all .2s; position:relative; }
+.file-upload-area:hover { border-color:var(--primary); background:rgba(108,92,231,0.05); }
+.file-upload-area.has-files { border-color:var(--success); border-style:solid; }
+.file-upload-area input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; }
+.file-upload-label { font-size:13px; color:var(--text3); }
+.file-upload-label svg { display:block; margin:0 auto 8px; opacity:.5; }
+.file-preview-list { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.file-preview-item { position:relative; width:60px; height:60px; border-radius:6px; overflow:hidden; border:1px solid var(--border); }
+.file-preview-item img { width:100%; height:100%; object-fit:cover; }
+.file-preview-remove { position:absolute; top:-4px; right:-4px; width:18px; height:18px; border-radius:50%; background:var(--danger); color:#fff; border:none; font-size:11px; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; }
+
 /* Toast */
 .toast { position:fixed; bottom:24px; right:24px; background:var(--success); color:#fff; padding:14px 22px; border-radius:10px; font-size:14px; font-weight:600; z-index:2000; transform:translateY(80px); opacity:0; transition:all .3s; }
 .toast.show { transform:translateY(0); opacity:1; }
@@ -567,6 +579,18 @@ body { font-family: 'Segoe UI','Apple SD Gothic Neo',sans-serif; background:var(
               <label class="form-label">컬러 톤 (선택)</label>
               <input class="form-input" id="bannerColor" placeholder="예: 핑크, 화이트 / 네이비, 골드">
             </div>
+            <div class="form-group">
+              <label class="form-label">참고 이미지 첨부 (선택, 최대 5장)</label>
+              <div class="file-upload-area" id="bannerUploadArea">
+                <input type="file" accept="image/*" multiple onchange="handleFileUpload(event,'banner')" id="bannerFileInput">
+                <div class="file-upload-label">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  클릭 또는 드래그하여 이미지 첨부<br>
+                  <span style="font-size:11px;">제품 사진, 로고, 참고 디자인 등</span>
+                </div>
+                <div class="file-preview-list" id="bannerPreviews"></div>
+              </div>
+            </div>
             <button class="btn btn-primary btn-lg" style="width:100%" onclick="generateAIBanner()">AI 배너 생성하기</button>
             <div style="margin-top:12px;display:flex;gap:8px;">
               <button class="btn btn-ghost btn-sm" style="flex:1" onclick="downloadAIImage('bannerCanvas')">이미지 저장</button>
@@ -638,6 +662,18 @@ body { font-family: 'Segoe UI','Apple SD Gothic Neo',sans-serif; background:var(
             <div class="form-group">
               <label class="form-label">색상 키워드 (선택)</label>
               <input class="form-input" id="promoColor" placeholder="예: 골드, 블랙, 화이트">
+            </div>
+            <div class="form-group">
+              <label class="form-label">참고 이미지 첨부 (선택, 최대 5장)</label>
+              <div class="file-upload-area" id="promoUploadArea">
+                <input type="file" accept="image/*" multiple onchange="handleFileUpload(event,'promo')" id="promoFileInput">
+                <div class="file-upload-label">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  클릭 또는 드래그하여 이미지 첨부<br>
+                  <span style="font-size:11px;">제품 사진, 로고, 참고 디자인 등</span>
+                </div>
+                <div class="file-preview-list" id="promoPreviews"></div>
+              </div>
             </div>
             <button class="btn btn-primary btn-lg" style="width:100%" onclick="generateAIPromo()">AI 홍보물 생성하기</button>
             <div style="margin-top:12px;display:flex;gap:8px;">
@@ -1334,36 +1370,105 @@ ${sections.map(s => `<div style="background:var(--bg2);padding:14px;border-radiu
 }
 
 // =================== AI IMAGE GENERATION ===================
-const IMG_MODEL = 'gemini-2.5-flash-preview-image-generation';
+// Gemini image generation models (fallback chain)
+const IMG_MODELS = [
+  'gemini-2.5-flash-preview-image-generation',
+  'gemini-2.0-flash-exp'
+];
 
-async function callGeminiImage(prompt, aspectRatio) {
+// Uploaded reference images store: { banner: [{base64, mimeType}], promo: [...] }
+const uploadedImages = { banner: [], promo: [] };
+
+function handleFileUpload(event, target) {
+  const files = Array.from(event.target.files).slice(0, 5);
+  if (!files.length) return;
+
+  const area = document.getElementById(target + 'UploadArea');
+  const previewList = document.getElementById(target + 'Previews');
+  const remaining = 5 - uploadedImages[target].length;
+  const toProcess = files.slice(0, remaining);
+
+  toProcess.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64Full = e.target.result;
+      const mimeType = file.type || 'image/png';
+      const base64Data = base64Full.split(',')[1];
+      uploadedImages[target].push({ data: base64Data, mimeType, name: file.name });
+      renderUploadPreviews(target);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderUploadPreviews(target) {
+  const previewList = document.getElementById(target + 'Previews');
+  const area = document.getElementById(target + 'UploadArea');
+  if (uploadedImages[target].length > 0) area.classList.add('has-files');
+  else area.classList.remove('has-files');
+
+  previewList.innerHTML = uploadedImages[target].map((img, i) =>
+    `<div class="file-preview-item">
+      <img src="data:${img.mimeType};base64,${img.data}" />
+      <button class="file-preview-remove" onclick="event.stopPropagation();removeUpload('${target}',${i})">x</button>
+    </div>`
+  ).join('') + (uploadedImages[target].length > 0
+    ? `<div style="font-size:11px;color:var(--text3);align-self:center;margin-left:4px;">${uploadedImages[target].length}/5</div>`
+    : '');
+}
+
+function removeUpload(target, index) {
+  uploadedImages[target].splice(index, 1);
+  renderUploadPreviews(target);
+}
+
+async function callGeminiImage(prompt, aspectRatio, refImages) {
   const key = getApiKey();
-  if (!key) throw new Error('API Key가 필요합니다.');
+  if (!key) throw new Error('API Key가 필요합니다. 상단에서 입력해주세요.');
+
+  // Build parts: text prompt + reference images
+  const parts = [{ text: prompt }];
+  if (refImages && refImages.length > 0) {
+    refImages.forEach(img => {
+      parts.push({ inlineData: { mimeType: img.mimeType, data: img.data } });
+    });
+  }
 
   const body = {
-    contents: [{ parts: [{ text: prompt }] }],
+    contents: [{ parts }],
     generationConfig: {
       responseModalities: ['TEXT', 'IMAGE'],
       imageConfig: { aspectRatio: aspectRatio || '1:1' }
     }
   };
 
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${IMG_MODEL}:generateContent?key=${encodeURIComponent(key)}`,
-    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
-  );
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || `HTTP ${res.status}`);
+  // Try models in order
+  let lastError = null;
+  for (const model of IMG_MODELS) {
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+      );
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        lastError = new Error(err.error?.message || `HTTP ${res.status} (${model})`);
+        continue; // try next model
+      }
+      const data = await res.json();
+      const resParts = data.candidates?.[0]?.content?.parts || [];
+      let imageData = null, textData = '';
+      for (const part of resParts) {
+        if (part.inlineData) imageData = part.inlineData;
+        if (part.text) textData += part.text;
+      }
+      return { imageData, textData };
+    } catch(e) {
+      lastError = e;
+      continue;
+    }
   }
-  const data = await res.json();
-  const parts = data.candidates?.[0]?.content?.parts || [];
-  let imageData = null, textData = '';
-  for (const part of parts) {
-    if (part.inlineData) imageData = part.inlineData;
-    if (part.text) textData += part.text;
-  }
-  return { imageData, textData };
+  throw lastError || new Error('모든 이미지 생성 모델에서 실패했습니다.');
 }
 
 function renderAIImage(containerId, imageData, textData) {
@@ -1391,6 +1496,7 @@ function downloadAIImage(containerId) {
 }
 
 let lastBannerPrompt = '';
+let lastBannerImages = [];
 async function generateAIBanner() {
   const type = document.getElementById('bannerType').value;
   const ratio = document.getElementById('bannerRatio').value;
@@ -1398,6 +1504,7 @@ async function generateAIBanner() {
   const desc = document.getElementById('bannerDesc').value;
   const text = document.getElementById('bannerText').value;
   const color = document.getElementById('bannerColor').value;
+  const refImgs = uploadedImages.banner;
 
   if (!desc) { showToast('배너 내용 설명을 입력해주세요.', true); return; }
 
@@ -1407,12 +1514,16 @@ async function generateAIBanner() {
   const resultEl = document.getElementById('bannerResult');
   resultEl.innerHTML = '<div class="gen-loading"><div class="spinner"></div>Gemini가 배너를 디자인하고 있습니다... (10~30초 소요)</div>';
 
+  const refNote = refImgs.length > 0
+    ? `\n\nI have attached ${refImgs.length} reference image(s). Please use them as reference for the design - incorporate the products, logos, or style elements shown in these images into the banner design.`
+    : '';
+
   lastBannerPrompt = `Create a professional ${typeMap[type]} design.
 
 Style: ${styleMap[style]}
 Description: ${desc}
 ${text ? 'Include this text in the design: "' + text + '"' : ''}
-${color ? 'Color palette: ' + color : ''}
+${color ? 'Color palette: ' + color : ''}${refNote}
 
 Requirements:
 - Professional advertising quality
@@ -1421,8 +1532,10 @@ Requirements:
 - Text should be legible and well-placed
 - High quality, ready to use as actual advertisement`;
 
+  lastBannerImages = [...refImgs];
+
   try {
-    const { imageData, textData } = await callGeminiImage(lastBannerPrompt, ratio);
+    const { imageData, textData } = await callGeminiImage(lastBannerPrompt, ratio, refImgs);
     renderAIImage('bannerResult', imageData, textData);
     showToast('AI 배너가 생성되었습니다!');
   } catch(e) {
@@ -1437,7 +1550,7 @@ async function regenerateAIBanner() {
   const resultEl = document.getElementById('bannerResult');
   resultEl.innerHTML = '<div class="gen-loading"><div class="spinner"></div>다른 버전으로 다시 생성 중...</div>';
   try {
-    const { imageData, textData } = await callGeminiImage(lastBannerPrompt + '\n\nCreate a different variation from the previous one.', ratio);
+    const { imageData, textData } = await callGeminiImage(lastBannerPrompt + '\n\nCreate a different variation from the previous one.', ratio, lastBannerImages);
     renderAIImage('bannerResult', imageData, textData);
     showToast('새로운 버전이 생성되었습니다!');
   } catch(e) {
@@ -1446,6 +1559,7 @@ async function regenerateAIBanner() {
 }
 
 let lastPromoPrompt = '';
+let lastPromoImages = [];
 async function generateAIPromo() {
   const type = document.getElementById('promoType').value;
   const ratio = document.getElementById('promoRatio').value;
@@ -1453,6 +1567,7 @@ async function generateAIPromo() {
   const desc = document.getElementById('promoDesc').value;
   const brand = document.getElementById('promoBrand').value;
   const color = document.getElementById('promoColor').value;
+  const refImgs = uploadedImages.promo;
 
   if (!desc) { showToast('상세 요청사항을 입력해주세요.', true); return; }
 
@@ -1462,12 +1577,16 @@ async function generateAIPromo() {
   const resultEl = document.getElementById('promoResult');
   resultEl.innerHTML = '<div class="gen-loading"><div class="spinner"></div>Gemini가 홍보물을 디자인하고 있습니다... (10~30초 소요)</div>';
 
+  const refNote = refImgs.length > 0
+    ? `\n\nI have attached ${refImgs.length} reference image(s). Please use them as reference - incorporate the products, logos, brand elements, or design style shown in these images.`
+    : '';
+
   lastPromoPrompt = `Create a professional ${typeMap[type]} design.
 
 Design style: ${styleMap[style]}
 Description: ${desc}
 ${brand ? 'Brand name: ' + brand : ''}
-${color ? 'Color scheme: ' + color : ''}
+${color ? 'Color scheme: ' + color : ''}${refNote}
 
 Requirements:
 - Professional print/digital quality design
@@ -1476,8 +1595,10 @@ Requirements:
 - Any text should be legible and well-designed
 - High quality, polished, ready for production`;
 
+  lastPromoImages = [...refImgs];
+
   try {
-    const { imageData, textData } = await callGeminiImage(lastPromoPrompt, ratio);
+    const { imageData, textData } = await callGeminiImage(lastPromoPrompt, ratio, refImgs);
     renderAIImage('promoResult', imageData, textData);
     showToast('AI 홍보물이 생성되었습니다!');
   } catch(e) {
@@ -1492,7 +1613,7 @@ async function regenerateAIPromo() {
   const resultEl = document.getElementById('promoResult');
   resultEl.innerHTML = '<div class="gen-loading"><div class="spinner"></div>다른 버전으로 다시 생성 중...</div>';
   try {
-    const { imageData, textData } = await callGeminiImage(lastPromoPrompt + '\n\nCreate a completely different design variation.', ratio);
+    const { imageData, textData } = await callGeminiImage(lastPromoPrompt + '\n\nCreate a completely different design variation.', ratio, lastPromoImages);
     renderAIImage('promoResult', imageData, textData);
     showToast('새로운 버전이 생성되었습니다!');
   } catch(e) {
