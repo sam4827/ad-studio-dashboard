@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AD Studio - 광고 대행 대시보드</title>
+<style>
+:root {
+  --primary: #6C5CE7;
+  --primary-light: #A29BFE;
+  --primary-dark: #5A4BD1;
+  --accent: #00CEC9;
+  --accent2: #FD79A8;
+  --bg: #0F0E17;
+  --bg2: #1A1932;
+  --bg3: #232246;
+  --card: #1E1D36;
+  --card-hover: #28274A;
+  --text: #FFFFFE;
+  --text2: #A7A9BE;
+  --text3: #72738C;
+  --success: #00B894;
+  --warning: #FDCB6E;
+  --danger: #E17055;
+  --border: rgba(108,92,231,0.2);
+  --shadow: 0 4px 24px rgba(0,0,0,0.3);
+  --radius: 12px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Segoe UI','Apple SD Gothic Neo',sans-serif; background:var(--bg); color:var(--text); display:flex; height:100vh; overflow:hidden; }
+
+/* Sidebar */
+.sidebar { width:260px; background:var(--bg2); border-right:1px solid var(--border); display:flex; flex-direction:column; flex-shrink:0; }
+.sidebar-logo { padding:24px 20px; font-size:22px; font-weight:800; background:linear-gradient(135deg,var(--primary),var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.5px; border-bottom:1px solid var(--border); }
+.sidebar-logo span { font-size:12px; display:block; -webkit-text-fill-color:var(--text3); font-weight:400; margin-top:4px; }
+.nav-section { padding:16px 12px 8px; font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; }
+.nav-item { display:flex; align-items:center; gap:12px; padding:11px 16px; margin:2px 8px; border-radius:8px; cursor:pointer; color:var(--text2); font-size:14px; transition:all .2s; }
+.nav-item:hover { background:var(--bg3); color:var(--text); }
+.nav-item.active { background:var(--primary); color:#fff; font-weight:600; }
+.nav-item svg { width:18px; height:18px; flex-shrink:0; }
+.nav-badge { margin-left:auto; background:var(--accent2); color:#fff; font-size:11px; padding:2px 8px; border-radius:10px; font-weight:700; }
+.sidebar-footer { margin-top:auto; padding:16px; border-top:1px solid var(--border); }
+.user-info { display:flex; align-items:center; gap:10px; }
+.user-avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--primary),var(--accent)); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; }
+.user-name { font-size:13px; font-weight:600; }
+.user-role { font-size:11px; color:var(--text3); }
+
+/* Main */
+.main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+.topbar { height:60px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 28px; flex-shrink:0; }
+.topbar-title { font-size:18px; font-weight:700; }
+.topbar-actions { display:flex; gap:12px; align-items:center; }
+.btn { padding:8px 18px; border-radius:8px; border:none; cursor:pointer; font-size:13px; font-weight:600; transition:all .2s; display:inline-flex; align-items:center; gap:6px; }
+.btn-primary { background:var(--primary); color:#fff; }
+.btn-primary:hover { background:var(--primary-dark); transform:translateY(-1px); }
+.btn-ghost { background:transparent; color:var(--text2); border:1px solid var(--border); }
+.btn-ghost:hover { border-color:var(--primary); color:var(--text); }
+.btn-accent { background:var(--accent); color:#000; }
+.btn-accent:hover { opacity:.9; }
+.btn-danger { background:var(--danger); color:#fff; }
+.btn-sm { padding:6px 12px; font-size:12px; }
+.btn-lg { padding:12px 24px; font-size:15px; }
+
+.content { flex:1; overflow-y:auto; padding:28px; }
+.content::-webkit-scrollbar { width:6px; }
+.content::-webkit-scrollbar-thumb { background:var(--bg3); border-radius:3px; }
+
+/* Pages */
+.page { display:none; }
+.page.active { display:block; }
+
+/* Dashboard */
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
+.stat-card { background:var(--card); border-radius:var(--radius); padding:20px; border:1px solid var(--border); transition:all .3s; }
+.stat-card:hover { border-color:var(--primary); transform:translateY(-2px); }
+.stat-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; margin-bottom:12px; font-size:20px; }
+.stat-icon.blue { background:rgba(108,92,231,0.15); color:var(--primary); }
+.stat-icon.green { background:rgba(0,206,201,0.15); color:var(--accent); }
+.stat-icon.pink { background:rgba(253,121,168,0.15); color:var(--accent2); }
+.stat-icon.yellow { background:rgba(253,203,110,0.15); color:var(--warning); }
+.stat-value { font-size:28px; font-weight:800; margin-bottom:4px; }
+.stat-label { font-size:13px; color:var(--text3); }
+.stat-change { font-size:12px; margin-top:8px; }
+.stat-change.up { color:var(--success); }
+.stat-change.down { color:var(--danger); }
+
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:28px; }
+.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; margin-bottom:28px; }
+
+.card { background:var(--card); border-radius:var(--radius); border:1px solid var(--border); overflow:hidden; }
+.card-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+.card-title { font-size:15px; font-weight:700; }
+.card-body { padding:20px; }
+
+/* Request list */
+.req-list { display:flex; flex-direction:column; gap:8px; }
+.req-item { display:flex; align-items:center; gap:12px; padding:12px 16px; background:var(--bg); border-radius:8px; cursor:pointer; transition:all .2s; }
+.req-item:hover { background:var(--bg3); }
+.req-client { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#fff; flex-shrink:0; }
+.req-info { flex:1; min-width:0; }
+.req-title { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.req-meta { font-size:11px; color:var(--text3); margin-top:2px; }
+.status-badge { padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; white-space:nowrap; }
+.status-pending { background:rgba(253,203,110,0.15); color:var(--warning); }
+.status-progress { background:rgba(108,92,231,0.15); color:var(--primary-light); }
+.status-review { background:rgba(0,206,201,0.15); color:var(--accent); }
+.status-done { background:rgba(0,184,148,0.15); color:var(--success); }
+
+/* Form */
+.form-group { margin-bottom:16px; }
+.form-label { display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:var(--text2); }
+.form-input, .form-select, .form-textarea {
+  width:100%; padding:10px 14px; border-radius:8px; border:1px solid var(--border);
+  background:var(--bg); color:var(--text); font-size:14px; transition:border .2s;
+  font-family:inherit;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { outline:none; border-color:var(--primary); }
+.form-textarea { resize:vertical; min-height:80px; }
+.form-select { cursor:pointer; }
+.form-select option { background:var(--bg2); }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+/* Chatbot */
+.chat-container { display:flex; flex-direction:column; height:calc(100vh - 148px); }
+.chat-messages { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:16px; }
+.chat-messages::-webkit-scrollbar { width:4px; }
+.chat-messages::-webkit-scrollbar-thumb { background:var(--bg3); border-radius:2px; }
+.chat-msg { max-width:80%; padding:14px 18px; border-radius:16px; font-size:14px; line-height:1.6; animation:msgIn .3s ease; }
+@keyframes msgIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+.chat-msg.bot { background:var(--card); border:1px solid var(--border); align-self:flex-start; border-bottom-left-radius:4px; }
+.chat-msg.user { background:var(--primary); color:#fff; align-self:flex-end; border-bottom-right-radius:4px; }
+.chat-msg .msg-label { font-size:11px; color:var(--text3); margin-bottom:6px; font-weight:600; }
+.chat-msg.user .msg-label { color:rgba(255,255,255,0.7); }
+.chat-msg pre { background:var(--bg); padding:12px; border-radius:8px; margin-top:8px; font-size:13px; overflow-x:auto; white-space:pre-wrap; }
+.chat-input-area { padding:16px 20px; border-top:1px solid var(--border); background:var(--bg2); display:flex; gap:10px; align-items:flex-end; }
+.chat-input { flex:1; padding:12px 16px; border-radius:12px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:14px; font-family:inherit; resize:none; max-height:120px; min-height:44px; }
+.chat-input:focus { outline:none; border-color:var(--primary); }
+.chat-send { width:44px; height:44px; border-radius:12px; border:none; background:var(--primary); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .2s; flex-shrink:0; }
+.chat-send:hover { background:var(--primary-dark); }
+.quick-btns { display:flex; gap:8px; padding:0 20px 12px; flex-wrap:wrap; }
+.quick-btn { padding:6px 14px; border-radius:20px; border:1px solid var(--border); background:transparent; color:var(--text2); font-size:12px; cursor:pointer; transition:all .2s; }
+.quick-btn:hover { border-color:var(--primary); color:var(--primary-light); background:rgba(108,92,231,0.1); }
+
+/* Content Generator */
+.gen-tabs { display:flex; gap:4px; margin-bottom:20px; background:var(--bg2); border-radius:10px; padding:4px; }
+.gen-tab { flex:1; padding:10px; text-align:center; border-radius:8px; cursor:pointer; font-size:13px; font-weight:600; color:var(--text3); transition:all .2s; border:none; background:none; }
+.gen-tab.active { background:var(--primary); color:#fff; }
+.gen-tab:hover:not(.active) { color:var(--text); }
+.gen-panel { display:none; }
+.gen-panel.active { display:block; }
+.gen-result { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-top:16px; min-height:200px; white-space:pre-wrap; line-height:1.8; font-size:14px; position:relative; }
+.gen-result-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.copy-btn { background:var(--bg3); border:none; color:var(--text2); padding:6px 12px; border-radius:6px; font-size:12px; cursor:pointer; transition:all .2s; }
+.copy-btn:hover { background:var(--primary); color:#fff; }
+.tag-list { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+.tag { padding:4px 10px; border-radius:6px; font-size:11px; background:rgba(108,92,231,0.15); color:var(--primary-light); }
+
+/* Client Management */
+.client-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; }
+.client-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; cursor:pointer; transition:all .3s; }
+.client-card:hover { border-color:var(--primary); transform:translateY(-2px); box-shadow:var(--shadow); }
+.client-header { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+.client-avatar { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:16px; color:#fff; }
+.client-name { font-weight:700; font-size:15px; }
+.client-industry { font-size:12px; color:var(--text3); }
+.client-stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.client-stat { background:var(--bg); border-radius:8px; padding:10px; text-align:center; }
+.client-stat-val { font-size:18px; font-weight:800; }
+.client-stat-label { font-size:11px; color:var(--text3); }
+
+/* Calendar */
+.cal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+.cal-nav { display:flex; gap:8px; align-items:center; }
+.cal-nav button { background:var(--bg3); border:none; color:var(--text); width:32px; height:32px; border-radius:8px; cursor:pointer; font-size:16px; }
+.cal-nav button:hover { background:var(--primary); }
+.cal-month { font-size:18px; font-weight:700; min-width:160px; text-align:center; }
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+.cal-day-label { text-align:center; font-size:12px; color:var(--text3); padding:8px; font-weight:600; }
+.cal-day { aspect-ratio:1; background:var(--bg); border-radius:8px; padding:6px; font-size:13px; cursor:pointer; transition:all .2s; position:relative; display:flex; flex-direction:column; }
+.cal-day:hover { background:var(--bg3); }
+.cal-day.today { border:2px solid var(--primary); }
+.cal-day.empty { background:transparent; cursor:default; }
+.cal-day .day-num { font-weight:600; margin-bottom:4px; }
+.cal-event { font-size:9px; padding:2px 4px; border-radius:3px; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cal-event.ev-deadline { background:rgba(225,112,85,0.3); color:var(--danger); }
+.cal-event.ev-meeting { background:rgba(108,92,231,0.3); color:var(--primary-light); }
+.cal-event.ev-delivery { background:rgba(0,206,201,0.3); color:var(--accent); }
+
+/* Modal */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1000; justify-content:center; align-items:center; backdrop-filter:blur(4px); }
+.modal-overlay.show { display:flex; }
+.modal { background:var(--bg2); border:1px solid var(--border); border-radius:16px; width:90%; max-width:600px; max-height:85vh; overflow-y:auto; }
+.modal-header { padding:20px 24px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+.modal-title { font-size:17px; font-weight:700; }
+.modal-close { background:none; border:none; color:var(--text3); font-size:24px; cursor:pointer; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:8px; }
+.modal-close:hover { background:var(--bg3); color:var(--text); }
+.modal-body { padding:24px; }
+.modal-footer { padding:16px 24px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:10px; }
+
+/* Banner Preview */
+.banner-preview { width:100%; aspect-ratio:16/9; border-radius:var(--radius); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:40px; position:relative; overflow:hidden; margin-top:16px; }
+.banner-preview h2 { font-size:28px; font-weight:800; margin-bottom:8px; text-shadow:0 2px 8px rgba(0,0,0,0.3); }
+.banner-preview p { font-size:16px; opacity:.9; }
+.banner-preview .banner-cta { margin-top:16px; padding:10px 28px; border-radius:24px; font-weight:700; font-size:14px; border:none; cursor:pointer; }
+
+/* Toast */
+.toast { position:fixed; bottom:24px; right:24px; background:var(--success); color:#fff; padding:14px 22px; border-radius:10px; font-size:14px; font-weight:600; z-index:2000; transform:translateY(80px); opacity:0; transition:all .3s; }
+.toast.show { transform:translateY(0); opacity:1; }
+.toast.error { background:var(--danger); }
+
+/* API Key Bar */
+.api-bar { background:var(--bg3); border-bottom:1px solid var(--border); padding:8px 28px; display:flex; align-items:center; gap:10px; font-size:13px; }
+.api-bar label { color:var(--text3); font-weight:600; white-space:nowrap; }
+.api-bar input { flex:1; max-width:400px; padding:6px 12px; border-radius:6px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:13px; font-family:monospace; }
+.api-bar input:focus { outline:none; border-color:var(--primary); }
+.api-status { padding:3px 10px; border-radius:12px; font-size:11px; font-weight:600; }
+.api-status.connected { background:rgba(0,184,148,0.15); color:var(--success); }
+.api-status.disconnected { background:rgba(225,112,85,0.15); color:var(--danger); }
+.gen-loading { display:flex; align-items:center; justify-content:center; gap:8px; padding:40px; color:var(--text3); }
+.gen-loading .spinner { width:20px; height:20px; border:3px solid var(--border); border-top-color:var(--primary); border-radius:50%; animation:spin .8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* Responsive */
+@media(max-width:1024px) { .stats-grid { grid-template-columns:repeat(2,1fr); } .grid-2,.grid-3 { grid-template-columns:1fr; } }
+@media(max-width:768px) { .sidebar { display:none; } }
+
+/* Loading */
+.typing { display:flex; gap:4px; padding:8px 0; }
+.typing span { width:8px; height:8px; border-radius:50%; background:var(--text3); animation:bounce .6s infinite alternate; }
+.typing span:nth-child(2) { animation-delay:.2s; }
+.typing span:nth-child(3) { animation-delay:.4s; }
+@keyframes bounce { to { transform:translateY(-6px); opacity:.4; } }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sidebar-logo">AD Studio<span>1인 광고 대행 플랫폼</span></div>
+  <div class="nav-section">메인</div>
+  <div class="nav-item active" data-page="dashboard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    대시보드
+  </div>
+  <div class="nav-item" data-page="requests">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+    요청 관리<span class="nav-badge" id="reqBadge">3</span>
+  </div>
+  <div class="nav-section">작업 도구</div>
+  <div class="nav-item" data-page="chatbot">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+    AI 어시스턴트
+  </div>
+  <div class="nav-item" data-page="generator">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+    콘텐츠 생성기
+  </div>
+  <div class="nav-section">관리</div>
+  <div class="nav-item" data-page="clients">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+    클라이언트
+  </div>
+  <div class="nav-item" data-page="calendar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    캘린더
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar">ME</div>
+      <div><div class="user-name">대표님</div><div class="user-role">AD Studio 대표</div></div>
+    </div>
+  </div>
+</nav>
+
+<!-- Main Content -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="pageTitle">대시보드</div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost btn-sm" onclick="exportData()">내보내기</button>
+      <button class="btn btn-primary btn-sm" onclick="openNewRequestModal()">+ 새 요청</button>
+    </div>
+  </div>
+  <div class="api-bar">
+    <label>Gemini API Key:</label>
+    <input type="password" id="geminiApiKey" placeholder="AIzaSy... (Google AI Studio에서 발급)" oninput="checkApiKey()">
+    <span class="api-status disconnected" id="apiStatus">미연결</span>
+    <button class="btn btn-ghost btn-sm" onclick="testApiKey()">연결 테스트</button>
+  </div>
+
+  <div class="content">
+    <!-- Dashboard Page -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon blue">&#128203;</div>
+          <div class="stat-value" id="totalReqs">12</div>
+          <div class="stat-label">전체 요청</div>
+          <div class="stat-change up">+3 이번 주</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon yellow">&#9203;</div>
+          <div class="stat-value" id="pendingReqs">3</div>
+          <div class="stat-label">대기중</div>
+          <div class="stat-change down">빠른 처리 필요</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">&#9989;</div>
+          <div class="stat-value" id="doneReqs">8</div>
+          <div class="stat-label">완료</div>
+          <div class="stat-change up">이번 달 완료율 89%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon pink">&#128101;</div>
+          <div class="stat-value" id="clientCount">5</div>
+          <div class="stat-label">활성 클라이언트</div>
+          <div class="stat-change up">+1 신규</div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">최근 요청</div>
+            <button class="btn btn-ghost btn-sm" onclick="navigateTo('requests')">전체보기</button>
+          </div>
+          <div class="card-body">
+            <div class="req-list" id="dashReqList"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">다가오는 일정</div>
+            <button class="btn btn-ghost btn-sm" onclick="navigateTo('calendar')">캘린더</button>
+          </div>
+          <div class="card-body">
+            <div class="req-list" id="dashSchedule"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">빠른 작업</div></div>
+        <div class="card-body" style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="navigateTo('chatbot')">AI에게 전략 요청</button>
+          <button class="btn btn-accent" onclick="navigateTo('generator')">SNS 카피 생성</button>
+          <button class="btn btn-ghost" onclick="openNewRequestModal()">새 요청 등록</button>
+          <button class="btn btn-ghost" onclick="navigateTo('clients')">클라이언트 추가</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Requests Page -->
+    <div class="page" id="page-requests">
+      <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" onclick="openNewRequestModal()">+ 새 요청</button>
+        <button class="btn btn-ghost btn-sm filter-btn active" data-filter="all">전체</button>
+        <button class="btn btn-ghost btn-sm filter-btn" data-filter="pending">대기중</button>
+        <button class="btn btn-ghost btn-sm filter-btn" data-filter="progress">진행중</button>
+        <button class="btn btn-ghost btn-sm filter-btn" data-filter="review">검토중</button>
+        <button class="btn btn-ghost btn-sm filter-btn" data-filter="done">완료</button>
+      </div>
+      <div class="req-list" id="fullReqList" style="gap:6px;"></div>
+    </div>
+
+    <!-- Chatbot Page -->
+    <div class="page" id="page-chatbot">
+      <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+          <div class="chat-msg bot">
+            <div class="msg-label">AI 어시스턴트 (Gemini)</div>
+            안녕하세요! AD Studio AI 어시스턴트입니다. Google Gemini AI가 광고 전략, SNS 카피, 마케팅 기획안 등 무엇이든 도와드리겠습니다.
+            <br><br>상단에 Gemini API Key를 입력하면 AI 기능이 활성화됩니다.
+            <br>아래 빠른 버튼을 사용하거나 자유롭게 요청해 주세요!
+          </div>
+        </div>
+        <div class="quick-btns">
+          <button class="quick-btn" onclick="quickChat('인스타그램 광고 카피 만들어줘')">인스타 카피</button>
+          <button class="quick-btn" onclick="quickChat('페이스북 광고 전략 짜줘')">FB 전략</button>
+          <button class="quick-btn" onclick="quickChat('브랜드 슬로건 추천해줘')">슬로건 추천</button>
+          <button class="quick-btn" onclick="quickChat('마케팅 캘린더 기획해줘')">캘린더 기획</button>
+          <button class="quick-btn" onclick="quickChat('타겟 고객 분석해줘')">타겟 분석</button>
+          <button class="quick-btn" onclick="quickChat('경쟁사 벤치마킹 포인트 정리해줘')">벤치마킹</button>
+        </div>
+        <div class="chat-input-area">
+          <textarea class="chat-input" id="chatInput" rows="1" placeholder="요청 사항을 입력하세요... (Shift+Enter: 줄바꿈)" onkeydown="handleChatKey(event)"></textarea>
+          <button class="chat-send" onclick="sendChat()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Generator Page -->
+    <div class="page" id="page-generator">
+      <div class="gen-tabs">
+        <button class="gen-tab active" data-gen="copy">SNS 카피</button>
+        <button class="gen-tab" data-gen="strategy">광고 전략</button>
+        <button class="gen-tab" data-gen="banner">배너 디자인</button>
+        <button class="gen-tab" data-gen="hashtag">해시태그</button>
+      </div>
+
+      <!-- SNS Copy Generator -->
+      <div class="gen-panel active" id="gen-copy">
+        <div class="grid-2">
+          <div>
+            <div class="form-group">
+              <label class="form-label">플랫폼</label>
+              <select class="form-select" id="copyPlatform">
+                <option value="instagram">Instagram</option>
+                <option value="facebook">Facebook</option>
+                <option value="blog">Blog / Naver</option>
+                <option value="youtube">YouTube</option>
+                <option value="tiktok">TikTok</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">업종/분야</label>
+              <select class="form-select" id="copyIndustry">
+                <option value="food">F&B / 음식</option>
+                <option value="beauty">뷰티 / 화장품</option>
+                <option value="fashion">패션 / 의류</option>
+                <option value="tech">IT / 테크</option>
+                <option value="health">건강 / 헬스</option>
+                <option value="edu">교육</option>
+                <option value="travel">여행 / 숙박</option>
+                <option value="realestate">부동산</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">톤 & 무드</label>
+              <select class="form-select" id="copyTone">
+                <option value="friendly">친근하고 편안한</option>
+                <option value="professional">전문적이고 신뢰감 있는</option>
+                <option value="trendy">트렌디하고 힙한</option>
+                <option value="emotional">감성적이고 따뜻한</option>
+                <option value="urgent">긴급하고 강렬한</option>
+                <option value="luxury">고급스러운</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">핵심 키워드 / 제품명</label>
+              <input class="form-input" id="copyKeyword" placeholder="예: 수제 아이스크림, 여름 한정">
+            </div>
+            <div class="form-group">
+              <label class="form-label">프로모션 (선택)</label>
+              <input class="form-input" id="copyPromo" placeholder="예: 20% 할인, 1+1, 무료배송">
+            </div>
+            <button class="btn btn-primary btn-lg" style="width:100%" onclick="generateCopy()">카피 생성하기</button>
+          </div>
+          <div>
+            <div class="gen-result-header">
+              <span style="font-weight:700;">생성 결과</span>
+              <button class="copy-btn" onclick="copyResult('copyResult')">복사하기</button>
+            </div>
+            <div class="gen-result" id="copyResult">
+              <span style="color:var(--text3)">왼쪽에서 옵션을 선택하고 '카피 생성하기'를 클릭하세요.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Strategy Generator -->
+      <div class="gen-panel" id="gen-strategy">
+        <div class="grid-2">
+          <div>
+            <div class="form-group">
+              <label class="form-label">광고 목적</label>
+              <select class="form-select" id="stratGoal">
+                <option value="awareness">브랜드 인지도 향상</option>
+                <option value="traffic">웹사이트 트래픽 증가</option>
+                <option value="conversion">전환율/매출 증대</option>
+                <option value="engagement">고객 참여 유도</option>
+                <option value="launch">신제품 런칭</option>
+                <option value="rebranding">리브랜딩</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">타겟 연령대</label>
+              <select class="form-select" id="stratAge">
+                <option value="10-20">10대~20대</option>
+                <option value="20-30">20대~30대</option>
+                <option value="30-40">30대~40대</option>
+                <option value="40-50">40대~50대</option>
+                <option value="all">전 연령</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">예산 규모</label>
+              <select class="form-select" id="stratBudget">
+                <option value="low">소규모 (50만원 미만)</option>
+                <option value="mid">중규모 (50~200만원)</option>
+                <option value="high">대규모 (200만원 이상)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">캠페인 기간</label>
+              <select class="form-select" id="stratDuration">
+                <option value="1week">1주</option>
+                <option value="2week">2주</option>
+                <option value="1month">1개월</option>
+                <option value="3month">3개월</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">브랜드/제품 설명</label>
+              <textarea class="form-textarea" id="stratDesc" placeholder="브랜드나 제품에 대한 간단한 설명"></textarea>
+            </div>
+            <button class="btn btn-primary btn-lg" style="width:100%" onclick="generateStrategy()">전략 생성하기</button>
+          </div>
+          <div>
+            <div class="gen-result-header">
+              <span style="font-weight:700;">전략 보고서</span>
+              <button class="copy-btn" onclick="copyResult('stratResult')">복사하기</button>
+            </div>
+            <div class="gen-result" id="stratResult">
+              <span style="color:var(--text3)">옵션을 설정하고 '전략 생성하기'를 클릭하세요.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Banner Generator -->
+      <div class="gen-panel" id="gen-banner">
+        <div class="grid-2">
+          <div>
+            <div class="form-group">
+              <label class="form-label">배너 크기</label>
+              <select class="form-select" id="bannerSize">
+                <option value="16:9">가로형 (16:9)</option>
+                <option value="1:1">정사각형 (1:1)</option>
+                <option value="9:16">세로형 (9:16 스토리)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">배경 스타일</label>
+              <select class="form-select" id="bannerBg">
+                <option value="gradient1">퍼플 그라데이션</option>
+                <option value="gradient2">블루 그라데이션</option>
+                <option value="gradient3">오렌지 그라데이션</option>
+                <option value="gradient4">그린 그라데이션</option>
+                <option value="dark">다크</option>
+                <option value="light">라이트</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">메인 카피</label>
+              <input class="form-input" id="bannerTitle" placeholder="예: 여름 세일 최대 50% OFF">
+            </div>
+            <div class="form-group">
+              <label class="form-label">서브 카피</label>
+              <input class="form-input" id="bannerSub" placeholder="예: 7월 한 달간 진행">
+            </div>
+            <div class="form-group">
+              <label class="form-label">CTA 버튼 텍스트</label>
+              <input class="form-input" id="bannerCta" placeholder="예: 지금 구매하기" value="지금 확인하기">
+            </div>
+            <button class="btn btn-accent btn-sm" style="width:100%;margin-bottom:8px" onclick="suggestBannerCopy()">AI 카피 추천받기</button>
+            <button class="btn btn-primary btn-lg" style="width:100%" onclick="generateBanner()">배너 생성하기</button>
+            <button class="btn btn-ghost btn-lg" style="width:100%;margin-top:8px" onclick="downloadBanner()">이미지로 저장</button>
+          </div>
+          <div>
+            <div class="gen-result-header"><span style="font-weight:700;">배너 미리보기</span></div>
+            <div class="banner-preview" id="bannerPreview" style="background:linear-gradient(135deg,#6C5CE7,#A29BFE);">
+              <h2>여기에 메인 카피가 표시됩니다</h2>
+              <p>서브 카피</p>
+              <button class="banner-cta" style="background:#fff;color:#6C5CE7;">지금 확인하기</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hashtag Generator -->
+      <div class="gen-panel" id="gen-hashtag">
+        <div class="grid-2">
+          <div>
+            <div class="form-group">
+              <label class="form-label">주제 / 키워드</label>
+              <input class="form-input" id="hashKeyword" placeholder="예: 카페, 브런치, 감성">
+            </div>
+            <div class="form-group">
+              <label class="form-label">플랫폼</label>
+              <select class="form-select" id="hashPlatform">
+                <option value="instagram">Instagram</option>
+                <option value="tiktok">TikTok</option>
+                <option value="youtube">YouTube</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">개수</label>
+              <select class="form-select" id="hashCount">
+                <option value="10">10개</option>
+                <option value="20">20개</option>
+                <option value="30">30개 (Instagram 최대)</option>
+              </select>
+            </div>
+            <button class="btn btn-primary btn-lg" style="width:100%" onclick="generateHashtags()">해시태그 생성</button>
+          </div>
+          <div>
+            <div class="gen-result-header">
+              <span style="font-weight:700;">생성된 해시태그</span>
+              <button class="copy-btn" onclick="copyResult('hashResult')">복사하기</button>
+            </div>
+            <div class="gen-result" id="hashResult">
+              <span style="color:var(--text3)">키워드를 입력하고 생성 버튼을 클릭하세요.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clients Page -->
+    <div class="page" id="page-clients">
+      <div style="margin-bottom:20px;display:flex;gap:10px;">
+        <button class="btn btn-primary btn-sm" onclick="openClientModal()">+ 클라이언트 추가</button>
+        <input class="form-input" style="max-width:300px" placeholder="클라이언트 검색..." id="clientSearch" oninput="filterClients()">
+      </div>
+      <div class="client-grid" id="clientGrid"></div>
+    </div>
+
+    <!-- Calendar Page -->
+    <div class="page" id="page-calendar">
+      <div class="card">
+        <div class="card-header">
+          <div class="cal-nav">
+            <button onclick="changeMonth(-1)">&lt;</button>
+            <div class="cal-month" id="calMonth"></div>
+            <button onclick="changeMonth(1)">&gt;</button>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openEventModal()">+ 일정 추가</button>
+        </div>
+        <div class="card-body">
+          <div class="cal-grid" id="calGrid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New Request Modal -->
+<div class="modal-overlay" id="requestModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">새 작업 요청</div>
+      <button class="modal-close" onclick="closeModal('requestModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">클라이언트</label>
+        <select class="form-select" id="reqClient"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">요청 제목</label>
+        <input class="form-input" id="reqTitle" placeholder="작업 요청 제목">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">작업 유형</label>
+          <select class="form-select" id="reqType">
+            <option value="sns">SNS 콘텐츠</option>
+            <option value="banner">배너/이미지</option>
+            <option value="video">영상</option>
+            <option value="strategy">전략 기획</option>
+            <option value="copy">카피라이팅</option>
+            <option value="branding">브랜딩</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">우선순위</label>
+          <select class="form-select" id="reqPriority">
+            <option value="normal">보통</option>
+            <option value="high">높음</option>
+            <option value="urgent">긴급</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">마감일</label>
+        <input class="form-input" type="date" id="reqDeadline">
+      </div>
+      <div class="form-group">
+        <label class="form-label">상세 요청 사항</label>
+        <textarea class="form-textarea" id="reqDetail" rows="4" placeholder="구체적인 요청 사항을 입력하세요..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('requestModal')">취소</button>
+      <button class="btn btn-primary" onclick="submitRequest()">요청 등록</button>
+    </div>
+  </div>
+</div>
+
+<!-- Client Modal -->
+<div class="modal-overlay" id="clientModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">클라이언트 추가</div>
+      <button class="modal-close" onclick="closeModal('clientModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">회사/브랜드명</label>
+        <input class="form-input" id="clientName" placeholder="클라이언트 이름">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">업종</label>
+          <select class="form-select" id="clientIndustry">
+            <option value="F&B">F&B / 음식</option>
+            <option value="뷰티">뷰티</option>
+            <option value="패션">패션</option>
+            <option value="IT">IT / 테크</option>
+            <option value="교육">교육</option>
+            <option value="건강">건강 / 헬스</option>
+            <option value="여행">여행</option>
+            <option value="기타">기타</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">담당자</label>
+          <input class="form-input" id="clientContact" placeholder="담당자 이름">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">연락처</label>
+        <input class="form-input" id="clientPhone" placeholder="010-0000-0000">
+      </div>
+      <div class="form-group">
+        <label class="form-label">메모</label>
+        <textarea class="form-textarea" id="clientMemo" rows="3" placeholder="특이사항, 선호 스타일 등"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('clientModal')">취소</button>
+      <button class="btn btn-primary" onclick="addClient()">추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- Event Modal -->
+<div class="modal-overlay" id="eventModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">일정 추가</div>
+      <button class="modal-close" onclick="closeModal('eventModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">일정 제목</label>
+        <input class="form-input" id="eventTitle" placeholder="일정 제목">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">날짜</label>
+          <input class="form-input" type="date" id="eventDate">
+        </div>
+        <div class="form-group">
+          <label class="form-label">유형</label>
+          <select class="form-select" id="eventType">
+            <option value="deadline">마감일</option>
+            <option value="meeting">미팅</option>
+            <option value="delivery">납품</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('eventModal')">취소</button>
+      <button class="btn btn-primary" onclick="addEvent()">추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- Request Detail Modal -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="detailTitle">요청 상세</div>
+      <button class="modal-close" onclick="closeModal('detailModal')">&times;</button>
+    </div>
+    <div class="modal-body" id="detailBody"></div>
+    <div class="modal-footer" id="detailFooter"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// =================== DATA ===================
+const COLORS = ['#6C5CE7','#00CEC9','#FD79A8','#FDCB6E','#E17055','#00B894','#0984E3','#D63031'];
+
+let clients = [
+  { id:1, name:'블루문 카페', industry:'F&B', contact:'김민수', phone:'010-1234-5678', memo:'따뜻한 감성 톤 선호', color:COLORS[0] },
+  { id:2, name:'글로우 뷰티', industry:'뷰티', contact:'이수진', phone:'010-2345-6789', memo:'럭셔리 이미지 중시', color:COLORS[1] },
+  { id:3, name:'핏라인 짐', industry:'건강', contact:'박정훈', phone:'010-3456-7890', memo:'강렬하고 다이나믹한 스타일', color:COLORS[2] },
+  { id:4, name:'스타트업허브', industry:'IT', contact:'최예은', phone:'010-4567-8901', memo:'깔끔하고 모던한 디자인', color:COLORS[3] },
+  { id:5, name:'트래블메이트', industry:'여행', contact:'정다운', phone:'010-5678-9012', memo:'여행 감성, 자연 느낌', color:COLORS[4] },
+];
+
+let requests = [
+  { id:1, clientId:1, title:'3월 시즌 메뉴 인스타 홍보', type:'sns', priority:'high', status:'pending', deadline:'2026-03-10', detail:'봄 시즌 신메뉴 3종에 대한 인스타그램 피드 + 스토리 콘텐츠 제작. 따뜻한 봄 분위기로.', created:'2026-03-04' },
+  { id:2, clientId:2, title:'신제품 런칭 배너 제작', type:'banner', priority:'urgent', status:'pending', deadline:'2026-03-08', detail:'글로우 세럼 신제품 런칭 배너. 네이버 스마트스토어 + 인스타 겸용. 고급스러운 느낌.', created:'2026-03-03' },
+  { id:3, clientId:3, title:'PT 프로모션 SNS 광고 전략', type:'strategy', priority:'normal', status:'progress', deadline:'2026-03-15', detail:'3월 PT 등록 프로모션 관련 페이스북/인스타 광고 전략 수립. 예산 100만원.', created:'2026-03-02' },
+  { id:4, clientId:4, title:'앱 출시 홍보 카피', type:'copy', priority:'high', status:'progress', deadline:'2026-03-12', detail:'신규 앱 출시 관련 프레스릴리즈, 앱스토어 설명문, SNS 카피 세트.', created:'2026-03-01' },
+  { id:5, clientId:1, title:'발렌타인 이벤트 결과 리포트', type:'strategy', priority:'normal', status:'done', deadline:'2026-02-28', detail:'2월 발렌타인 이벤트 성과 분석 리포트 작성.', created:'2026-02-20' },
+  { id:6, clientId:5, title:'제주 봄 패키지 홍보 영상 기획', type:'video', priority:'normal', status:'review', deadline:'2026-03-20', detail:'제주도 봄 시즌 패키지 상품 홍보 15초/30초 영상 기획안.', created:'2026-03-01' },
+  { id:7, clientId:2, title:'2월 인스타 운영 결산', type:'sns', priority:'normal', status:'done', deadline:'2026-03-05', detail:'2월 한 달 인스타그램 운영 결산 보고서.', created:'2026-02-25' },
+  { id:8, clientId:3, title:'헬스장 리뉴얼 브랜딩', type:'branding', priority:'normal', status:'done', deadline:'2026-02-28', detail:'인테리어 리뉴얼에 맞춘 로고 및 SNS 프로필 이미지 변경.', created:'2026-02-15' },
+  { id:9, clientId:1, title:'블루문 카페 블로그 체험단', type:'sns', priority:'normal', status:'done', deadline:'2026-02-20', detail:'블로그 체험단 10명 모집 및 가이드라인 제작.', created:'2026-02-10' },
+  { id:10, clientId:5, title:'여름 성수기 광고 기획', type:'strategy', priority:'normal', status:'pending', deadline:'2026-03-25', detail:'여름 성수기 대비 광고 채널 전략 및 예산 배분 기획.', created:'2026-03-04' },
+  { id:11, clientId:4, title:'앱 스크린샷 디자인', type:'banner', priority:'normal', status:'done', deadline:'2026-02-25', detail:'앱스토어/플레이스토어용 스크린샷 5장 디자인.', created:'2026-02-18' },
+  { id:12, clientId:2, title:'인플루언서 협업 기획', type:'strategy', priority:'normal', status:'done', deadline:'2026-02-22', detail:'뷰티 인플루언서 3인 협업 캠페인 기획.', created:'2026-02-12' },
+];
+
+let events = [
+  { id:1, title:'글로우 뷰티 배너 마감', date:'2026-03-08', type:'deadline' },
+  { id:2, title:'블루문 카페 미팅', date:'2026-03-07', type:'meeting' },
+  { id:3, title:'핏라인 짐 전략안 납품', date:'2026-03-15', type:'delivery' },
+  { id:4, title:'스타트업허브 카피 마감', date:'2026-03-12', type:'deadline' },
+  { id:5, title:'트래블메이트 영상 검토', date:'2026-03-20', type:'meeting' },
+  { id:6, title:'여름 광고기획 마감', date:'2026-03-25', type:'deadline' },
+];
+
+let currentMonth = new Date(2026, 2); // March 2026
+let nextId = { req: 13, client: 6, event: 7 };
+
+// =================== NAVIGATION ===================
+function navigateTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelector(`.nav-item[data-page="${page}"]`).classList.add('active');
+  const titles = { dashboard:'대시보드', requests:'요청 관리', chatbot:'AI 어시스턴트', generator:'콘텐츠 생성기', clients:'클라이언트 관리', calendar:'캘린더' };
+  document.getElementById('pageTitle').textContent = titles[page] || page;
+  if (page === 'requests') renderRequests();
+  if (page === 'clients') renderClients();
+  if (page === 'calendar') renderCalendar();
+  if (page === 'dashboard') renderDashboard();
+}
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => navigateTo(item.dataset.page));
+});
+
+// =================== DASHBOARD ===================
+function renderDashboard() {
+  const pending = requests.filter(r => r.status === 'pending').length;
+  const done = requests.filter(r => r.status === 'done').length;
+  document.getElementById('totalReqs').textContent = requests.length;
+  document.getElementById('pendingReqs').textContent = pending;
+  document.getElementById('doneReqs').textContent = done;
+  document.getElementById('clientCount').textContent = clients.length;
+  document.getElementById('reqBadge').textContent = pending;
+
+  const list = document.getElementById('dashReqList');
+  const recent = [...requests].sort((a,b) => b.id - a.id).slice(0, 5);
+  list.innerHTML = recent.map(r => {
+    const c = clients.find(cl => cl.id === r.clientId);
+    return reqItemHTML(r, c);
+  }).join('');
+
+  const sched = document.getElementById('dashSchedule');
+  const upcoming = [...events].sort((a,b) => a.date.localeCompare(b.date)).filter(e => e.date >= '2026-03-05').slice(0, 5);
+  sched.innerHTML = upcoming.map(e => `
+    <div class="req-item">
+      <div class="req-client" style="background:${e.type==='deadline'?'var(--danger)':e.type==='meeting'?'var(--primary)':'var(--accent)'}">
+        ${e.type==='deadline'?'D':e.type==='meeting'?'M':'N'}
+      </div>
+      <div class="req-info">
+        <div class="req-title">${e.title}</div>
+        <div class="req-meta">${e.date}</div>
+      </div>
+      <span class="status-badge ${e.type==='deadline'?'status-pending':e.type==='meeting'?'status-progress':'status-review'}">
+        ${e.type==='deadline'?'마감':e.type==='meeting'?'미팅':'납품'}
+      </span>
+    </div>
+  `).join('') || '<div style="color:var(--text3);padding:20px;text-align:center;">예정된 일정이 없습니다.</div>';
+}
+
+function reqItemHTML(r, c) {
+  const statusMap = { pending:'대기중', progress:'진행중', review:'검토중', done:'완료' };
+  const typeMap = { sns:'SNS', banner:'배너', video:'영상', strategy:'전략', copy:'카피', branding:'브랜딩' };
+  return `<div class="req-item" onclick="openDetail(${r.id})">
+    <div class="req-client" style="background:${c?.color||'#666'}">${(c?.name||'?').substring(0,1)}</div>
+    <div class="req-info">
+      <div class="req-title">${r.title}</div>
+      <div class="req-meta">${c?.name||'미지정'} · ${typeMap[r.type]||r.type} · 마감 ${r.deadline}</div>
+    </div>
+    <span class="status-badge status-${r.status}">${statusMap[r.status]}</span>
+  </div>`;
+}
+
+// =================== REQUESTS ===================
+let currentFilter = 'all';
+function renderRequests() {
+  const list = document.getElementById('fullReqList');
+  let filtered = currentFilter === 'all' ? requests : requests.filter(r => r.status === currentFilter);
+  filtered = [...filtered].sort((a,b) => b.id - a.id);
+  list.innerHTML = filtered.map(r => {
+    const c = clients.find(cl => cl.id === r.clientId);
+    return reqItemHTML(r, c);
+  }).join('') || '<div style="color:var(--text3);padding:40px;text-align:center;">요청이 없습니다.</div>';
+}
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    renderRequests();
+  });
+});
+
+function openDetail(id) {
+  const r = requests.find(req => req.id === id);
+  if (!r) return;
+  const c = clients.find(cl => cl.id === r.clientId);
+  const statusMap = { pending:'대기중', progress:'진행중', review:'검토중', done:'완료' };
+  const typeMap = { sns:'SNS 콘텐츠', banner:'배너/이미지', video:'영상', strategy:'전략 기획', copy:'카피라이팅', branding:'브랜딩' };
+  const prioMap = { normal:'보통', high:'높음', urgent:'긴급' };
+
+  document.getElementById('detailTitle').textContent = r.title;
+  document.getElementById('detailBody').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div><span style="color:var(--text3);font-size:12px;">클라이언트</span><br><strong>${c?.name||'미지정'}</strong></div>
+      <div><span style="color:var(--text3);font-size:12px;">유형</span><br><strong>${typeMap[r.type]}</strong></div>
+      <div><span style="color:var(--text3);font-size:12px;">상태</span><br><span class="status-badge status-${r.status}">${statusMap[r.status]}</span></div>
+      <div><span style="color:var(--text3);font-size:12px;">우선순위</span><br><strong style="color:${r.priority==='urgent'?'var(--danger)':r.priority==='high'?'var(--warning)':'var(--text)'}">${prioMap[r.priority]}</strong></div>
+      <div><span style="color:var(--text3);font-size:12px;">마감일</span><br><strong>${r.deadline}</strong></div>
+      <div><span style="color:var(--text3);font-size:12px;">등록일</span><br><strong>${r.created}</strong></div>
+    </div>
+    <div style="margin-top:12px;"><span style="color:var(--text3);font-size:12px;">상세 내용</span><br>
+      <div style="background:var(--bg);padding:14px;border-radius:8px;margin-top:6px;line-height:1.7;font-size:14px;">${r.detail}</div>
+    </div>
+  `;
+  const nextStatus = { pending:'progress', progress:'review', review:'done' };
+  const nextLabel = { pending:'진행 시작', progress:'검토 요청', review:'완료 처리' };
+  document.getElementById('detailFooter').innerHTML = `
+    ${r.status !== 'done' ? `<button class="btn btn-primary" onclick="changeStatus(${r.id},'${nextStatus[r.status]}')">${nextLabel[r.status]}</button>` : ''}
+    ${r.status !== 'done' ? `<button class="btn btn-danger btn-sm" onclick="deleteRequest(${r.id})">삭제</button>` : ''}
+    <button class="btn btn-accent" onclick="closeModal('detailModal');navigateTo('chatbot');quickChat('${c?.name} ${r.title}에 대한 작업을 도와줘')">AI에게 작업 요청</button>
+    <button class="btn btn-ghost" onclick="closeModal('detailModal')">닫기</button>
+  `;
+  openModal('detailModal');
+}
+
+function changeStatus(id, status) {
+  const r = requests.find(req => req.id === id);
+  if (r) { r.status = status; showToast('상태가 변경되었습니다.'); closeModal('detailModal'); renderDashboard(); }
+}
+function deleteRequest(id) {
+  requests = requests.filter(r => r.id !== id);
+  showToast('요청이 삭제되었습니다.'); closeModal('detailModal'); renderDashboard();
+}
+
+function openNewRequestModal() {
+  const sel = document.getElementById('reqClient');
+  sel.innerHTML = clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  document.getElementById('reqTitle').value = '';
+  document.getElementById('reqDetail').value = '';
+  document.getElementById('reqDeadline').value = '';
+  openModal('requestModal');
+}
+function submitRequest() {
+  const title = document.getElementById('reqTitle').value.trim();
+  if (!title) { showToast('제목을 입력하세요.'); return; }
+  requests.push({
+    id: nextId.req++,
+    clientId: parseInt(document.getElementById('reqClient').value),
+    title,
+    type: document.getElementById('reqType').value,
+    priority: document.getElementById('reqPriority').value,
+    status: 'pending',
+    deadline: document.getElementById('reqDeadline').value || '미정',
+    detail: document.getElementById('reqDetail').value,
+    created: '2026-03-05'
+  });
+  closeModal('requestModal');
+  showToast('요청이 등록되었습니다!');
+  renderDashboard();
+}
+
+// =================== GEMINI API ===================
+function getApiKey() { return document.getElementById('geminiApiKey').value.trim(); }
+
+function checkApiKey() {
+  const key = getApiKey();
+  const status = document.getElementById('apiStatus');
+  if (key.length > 10) {
+    status.textContent = '키 입력됨';
+    status.className = 'api-status connected';
+  } else {
+    status.textContent = '미연결';
+    status.className = 'api-status disconnected';
+  }
+}
+
+async function testApiKey() {
+  const key = getApiKey();
+  if (!key) { showToast('API Key를 입력하세요.', true); return; }
+  const status = document.getElementById('apiStatus');
+  status.textContent = '테스트 중...';
+  status.className = 'api-status disconnected';
+  try {
+    const res = await callGemini('안녕하세요. 짧게 인사해주세요.');
+    if (res) {
+      status.textContent = '연결 성공';
+      status.className = 'api-status connected';
+      showToast('Gemini API 연결 성공!');
+    }
+  } catch(e) {
+    status.textContent = '연결 실패';
+    status.className = 'api-status disconnected';
+    showToast('API 연결 실패: ' + e.message, true);
+  }
+}
+
+async function callGemini(prompt, systemInstruction) {
+  const key = getApiKey();
+  if (!key) throw new Error('API Key가 필요합니다.');
+
+  const body = { contents: [{ parts: [{ text: prompt }] }] };
+  if (systemInstruction) {
+    body.systemInstruction = { parts: [{ text: systemInstruction }] };
+  }
+  body.generationConfig = { temperature: 0.9, maxOutputTokens: 4096 };
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`,
+    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || `HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+}
+
+const SYSTEM_PROMPT = `당신은 "AD Studio AI 어시스턴트"입니다. 1인 광고 대행사의 전문 마케팅 AI 파트너입니다.
+
+역할:
+- 광고 카피라이팅, 마케팅 전략 수립, SNS 콘텐츠 기획, 브랜딩 컨설팅
+- 클라이언트별 맞춤 마케팅 솔루션 제공
+- 트렌디하고 실용적인 마케팅 조언
+
+답변 스타일:
+- 한국어로 답변
+- 구체적이고 바로 활용 가능한 콘텐츠 제공
+- 옵션을 여러 개 제시하여 선택지를 넓혀줄 것
+- 마크다운 없이 일반 텍스트로 답변 (들여쓰기, 줄바꿈으로 구조화)`;
+
+let chatHistory = [];
+
+// =================== CHATBOT ===================
+function buildChatContext(msg) {
+  let context = '';
+  // Add client info if mentioned
+  const lower = msg.toLowerCase();
+  const cl = clients.find(c => lower.includes(c.name.toLowerCase()));
+  if (cl) {
+    const clReqs = requests.filter(r => r.clientId === cl.id);
+    const pending = clReqs.filter(r => r.status !== 'done');
+    context = `\n\n[참고 - 클라이언트 정보]
+이름: ${cl.name} | 업종: ${cl.industry} | 담당자: ${cl.contact}
+메모: ${cl.memo}
+진행 중 작업: ${pending.map(r => r.title + '(' + r.status + ', 마감:' + r.deadline + ')').join(', ') || '없음'}`;
+  }
+  return context;
+}
+
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  input.style.height = 'auto';
+
+  const container = document.getElementById('chatMessages');
+  container.innerHTML += `<div class="chat-msg user"><div class="msg-label">나</div>${escapeHtml(msg)}</div>`;
+
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    container.innerHTML += `<div class="chat-msg bot"><div class="msg-label">AI 어시스턴트</div>Gemini API Key를 상단에 입력해주세요. Google AI Studio(aistudio.google.com)에서 무료로 발급받을 수 있습니다.</div>`;
+    container.scrollTop = container.scrollHeight;
+    return;
+  }
+
+  container.innerHTML += `<div class="chat-msg bot" id="typingMsg"><div class="msg-label">AI 어시스턴트 (Gemini)</div><div class="typing"><span></span><span></span><span></span></div></div>`;
+  container.scrollTop = container.scrollHeight;
+
+  try {
+    const context = buildChatContext(msg);
+    chatHistory.push({ role: 'user', parts: [{ text: msg + context }] });
+    // Keep last 10 messages for context
+    if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
+
+    const body = {
+      contents: chatHistory,
+      systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+      generationConfig: { temperature: 0.9, maxOutputTokens: 4096 }
+    };
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+    );
+    const data = await res.json();
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '응답을 생성하지 못했습니다.';
+    chatHistory.push({ role: 'model', parts: [{ text: reply }] });
+
+    document.getElementById('typingMsg').outerHTML = `<div class="chat-msg bot"><div class="msg-label">AI 어시스턴트 (Gemini)</div><pre style="background:transparent;padding:0;margin:0;font-family:inherit;white-space:pre-wrap;">${escapeHtml(reply)}</pre></div>`;
+  } catch(e) {
+    document.getElementById('typingMsg').outerHTML = `<div class="chat-msg bot"><div class="msg-label">AI 어시스턴트</div><span style="color:var(--danger);">오류: ${escapeHtml(e.message)}</span></div>`;
+  }
+  container.scrollTop = container.scrollHeight;
+}
+
+function quickChat(msg) {
+  document.getElementById('chatInput').value = msg;
+  sendChat();
+}
+function handleChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+  // Auto-resize
+  e.target.style.height = 'auto';
+  e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+}
+function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+// =================== CONTENT GENERATORS ===================
+document.querySelectorAll('.gen-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.gen-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.gen-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('gen-' + tab.dataset.gen).classList.add('active');
+  });
+});
+
+async function generateCopy() {
+  const platform = document.getElementById('copyPlatform').value;
+  const industry = document.getElementById('copyIndustry').value;
+  const tone = document.getElementById('copyTone').value;
+  const keyword = document.getElementById('copyKeyword').value || '우리 제품';
+  const promo = document.getElementById('copyPromo').value;
+
+  const tones = { friendly:'친근하고 편안한', professional:'전문적이고 신뢰감 있는', trendy:'트렌디하고 힙한', emotional:'감성적이고 따뜻한', urgent:'긴급하고 강렬한', luxury:'고급스럽고 프리미엄한' };
+  const platforms = { instagram:'Instagram 피드/릴스', facebook:'Facebook 광고', blog:'네이버 블로그', youtube:'YouTube 설명란/Shorts', tiktok:'TikTok' };
+  const industries = { food:'F&B/음식', beauty:'뷰티/화장품', fashion:'패션/의류', tech:'IT/테크', health:'건강/헬스', edu:'교육', travel:'여행/숙박', realestate:'부동산' };
+
+  const resultEl = document.getElementById('copyResult');
+  resultEl.innerHTML = '<div class="gen-loading"><div class="spinner"></div>Gemini가 카피를 생성하고 있습니다...</div>';
+
+  const prompt = `당신은 대한민국 최고의 SNS 광고 카피라이터입니다.
+
+아래 조건에 맞는 광고 카피를 3가지 옵션(Option A, B, C)으로 작성해주세요.
+
+[조건]
+- 플랫폼: ${platforms[platform]}
+- 업종: ${industries[industry]}
+- 톤앤무드: ${tones[tone]}
+- 핵심 키워드/제품명: ${keyword}
+${promo ? '- 프로모션: ' + promo : ''}
+
+[요구사항]
+- 각 옵션별로 스타일을 다르게 (예: 감성형, 직접형, 스토리형 등)
+- 플랫폼 특성에 맞는 길이와 형식
+- ${platform === 'instagram' ? '인스타그램에 맞는 해시태그 5~10개 포함' : ''}
+- ${platform === 'tiktok' ? '숏폼 영상에 어울리는 훅(Hook) 문장으로 시작' : ''}
+- ${platform === 'blog' ? '블로그 제목 + 본문 도입부 형식' : ''}
+- ${platform === 'youtube' ? '영상 제목 + 설명란 형식' : ''}
+- 바로 사용 가능한 수준으로 작성
+- 마크다운 서식 사용하지 말 것 (**, ## 등 금지)
+
+각 옵션은 "=== Option A ===" 형태로 구분해주세요.`;
+
+  try {
+    const result = await callGemini(prompt);
+    const options = result.split(/===\s*Option\s*[A-C]\s*===/).filter(s => s.trim());
+    const labels = ['Option A', 'Option B', 'Option C'];
+
+    resultEl.innerHTML = `<div style="color:var(--accent);font-weight:700;margin-bottom:12px;">[${platforms[platform]}] ${industries[industry]} · ${tones[tone]} 톤 | Gemini AI 생성</div>
+${options.map((v, i) => `<div style="background:var(--bg2);padding:14px;border-radius:8px;margin-bottom:12px;border-left:3px solid ${COLORS[i]};">
+<div style="font-weight:700;color:${COLORS[i]};margin-bottom:6px;">${labels[i] || 'Option '+(i+1)}</div>
+<pre style="background:transparent;padding:0;margin:0;font-family:inherit;white-space:pre-wrap;">${escapeHtml(v.trim())}</pre>
+</div>`).join('')}`;
+    showToast('Gemini가 카피를 생성했습니다!');
+  } catch(e) {
+    resultEl.innerHTML = `<span style="color:var(--danger);">오류: ${escapeHtml(e.message)}</span><br><br><span style="color:var(--text3);">상단에서 Gemini API Key를 확인해주세요.</span>`;
+    showToast('카피 생성 실패', true);
+  }
+}
+
+async function generateStrategy() {
+  const goal = document.getElementById('stratGoal').value;
+  const age = document.getElementById('stratAge').value;
+  const budget = document.getElementById('stratBudget').value;
+  const duration = document.getElementById('stratDuration').value;
+  const desc = document.getElementById('stratDesc').value || '(미입력)';
+
+  const goalMap = { awareness:'브랜드 인지도 향상', traffic:'웹사이트 트래픽 증가', conversion:'전환율/매출 증대', engagement:'고객 참여 유도', launch:'신제품 런칭', rebranding:'리브랜딩' };
+  const budgetMap = { low:'소규모 (50만원 미만)', mid:'중규모 (50~200만원)', high:'대규모 (200만원 이상)' };
+  const durationMap = { '1week':'1주', '2week':'2주', '1month':'1개월', '3month':'3개월' };
+
+  const resultEl = document.getElementById('stratResult');
+  resultEl.innerHTML = '<div class="gen-loading"><div class="spinner"></div>Gemini가 전략을 수립하고 있습니다...</div>';
+
+  const prompt = `당신은 대한민국 디지털 마케팅 전략 전문가입니다. 아래 조건에 맞는 상세한 광고 전략 보고서를 작성해주세요.
+
+[프로젝트 조건]
+- 광고 목적: ${goalMap[goal]}
+- 타겟 연령대: ${age}세
+- 예산 규모: ${budgetMap[budget]}
+- 캠페인 기간: ${durationMap[duration]}
+- 브랜드/제품: ${desc}
+
+[보고서 구성 - 아래 항목을 모두 포함]
+1. 프로젝트 개요 요약
+2. 추천 광고 채널 및 채널별 예산 배분 (비율 %)
+3. 타겟 오디언스 상세 설정 (코어/확장/리타겟팅)
+4. 콘텐츠 전략 (소재 유형, 크리에이티브 방향)
+5. 실행 로드맵 (Phase별 단계)
+6. KPI 목표 수치 (CPM, CTR, CPC, CPA, ROAS 등)
+7. 주의사항 및 최적화 팁
+
+[작성 규칙]
+- 한국 시장 기준, 실무에서 바로 활용 가능한 수준
+- 구체적인 수치와 액션 아이템 포함
+- 마크다운 서식(**, ##, - 등) 사용하지 말 것
+- 섹션은 "=== 1. 제목 ===" 형식으로 구분`;
+
+  try {
+    const result = await callGemini(prompt);
+    const sections = result.split(/===\s*\d+\.\s*/).filter(s => s.trim());
+
+    resultEl.innerHTML = `<div style="color:var(--accent);font-weight:700;font-size:16px;margin-bottom:16px;">광고 전략 보고서 | Gemini AI 생성</div>
+${sections.map(s => `<div style="background:var(--bg2);padding:14px;border-radius:8px;margin-bottom:12px;">
+<pre style="background:transparent;padding:0;margin:0;font-family:inherit;white-space:pre-wrap;">${escapeHtml(s.trim())}</pre>
+</div>`).join('')}`;
+    showToast('Gemini가 전략 보고서를 생성했습니다!');
+  } catch(e) {
+    resultEl.innerHTML = `<span style="color:var(--danger);">오류: ${escapeHtml(e.message)}</span><br><br><span style="color:var(--text3);">상단에서 Gemini API Key를 확인해주세요.</span>`;
+    showToast('전략 생성 실패', true);
+  }
+}
+
+function generateBanner() {
+  const size = document.getElementById('bannerSize').value;
+  const bg = document.getElementById('bannerBg').value;
+  const title = document.getElementById('bannerTitle').value || '메인 카피를 입력하세요';
+  const sub = document.getElementById('bannerSub').value || '';
+  const cta = document.getElementById('bannerCta').value || '자세히 보기';
+
+  const bgStyles = {
+    gradient1: 'linear-gradient(135deg, #6C5CE7, #A29BFE)',
+    gradient2: 'linear-gradient(135deg, #0984E3, #74B9FF)',
+    gradient3: 'linear-gradient(135deg, #E17055, #FDCB6E)',
+    gradient4: 'linear-gradient(135deg, #00B894, #00CEC9)',
+    dark: 'linear-gradient(135deg, #2D3436, #636E72)',
+    light: 'linear-gradient(135deg, #DFE6E9, #FFFFFF)'
+  };
+  const ctaColors = {
+    gradient1: { bg:'#fff', color:'#6C5CE7' },
+    gradient2: { bg:'#fff', color:'#0984E3' },
+    gradient3: { bg:'#fff', color:'#E17055' },
+    gradient4: { bg:'#fff', color:'#00B894' },
+    dark: { bg:'#fff', color:'#2D3436' },
+    light: { bg:'#2D3436', color:'#fff' }
+  };
+  const textColor = bg === 'light' ? '#2D3436' : '#fff';
+  const ar = { '16:9':'16/9', '1:1':'1/1', '9:16':'9/16' };
+  const cc = ctaColors[bg];
+
+  const preview = document.getElementById('bannerPreview');
+  preview.style.background = bgStyles[bg];
+  preview.style.aspectRatio = ar[size];
+  preview.style.color = textColor;
+  preview.innerHTML = `<h2 style="font-size:${size==='9:16'?'22px':'28px'};margin-bottom:8px;text-shadow:0 2px 8px rgba(0,0,0,0.2);">${escapeHtml(title)}</h2>
+    <p style="font-size:${size==='9:16'?'13px':'16px'};opacity:.85;">${escapeHtml(sub)}</p>
+    <button class="banner-cta" style="background:${cc.bg};color:${cc.color};margin-top:16px;padding:10px 28px;border-radius:24px;font-weight:700;font-size:14px;border:none;">${escapeHtml(cta)}</button>`;
+  showToast('배너가 생성되었습니다!');
+}
+
+function downloadBanner() {
+  showToast('HTML 배너를 클립보드에 복사합니다.');
+  const preview = document.getElementById('bannerPreview');
+  const html = `<!DOCTYPE html><html><body style="margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;">${preview.outerHTML}</body></html>`;
+  navigator.clipboard.writeText(html).then(() => showToast('배너 HTML이 복사되었습니다!'));
+}
+
+async function suggestBannerCopy() {
+  const bg = document.getElementById('bannerBg').value;
+  const bgNames = { gradient1:'퍼플', gradient2:'블루', gradient3:'오렌지', gradient4:'그린', dark:'다크', light:'라이트' };
+  const prompt = `배너 광고의 메인 카피, 서브 카피, CTA 버튼 텍스트를 3세트 추천해주세요.
+
+배경 스타일: ${bgNames[bg]} 그라데이션
+
+출력 형식 (정확히 이 형식으로):
+1. 메인: (텍스트) | 서브: (텍스트) | CTA: (텍스트)
+2. 메인: (텍스트) | 서브: (텍스트) | CTA: (텍스트)
+3. 메인: (텍스트) | 서브: (텍스트) | CTA: (텍스트)
+
+규칙:
+- 메인 카피는 15자 이내로 임팩트있게
+- 서브 카피는 20자 이내
+- CTA는 8자 이내
+- 마크다운 서식 사용하지 말 것`;
+
+  try {
+    showToast('AI가 카피를 추천 중...');
+    const result = await callGemini(prompt);
+    const lines = result.split('\n').filter(l => l.match(/메인:/));
+    if (lines.length > 0) {
+      const first = lines[0];
+      const main = first.match(/메인:\s*(.+?)\s*\|/)?.[1] || '';
+      const sub = first.match(/서브:\s*(.+?)\s*\|/)?.[1] || '';
+      const cta = first.match(/CTA:\s*(.+?)$/)?.[1] || '';
+      document.getElementById('bannerTitle').value = main.trim();
+      document.getElementById('bannerSub').value = sub.trim();
+      document.getElementById('bannerCta').value = cta.trim();
+      generateBanner();
+      showToast('AI 추천 카피가 적용되었습니다! (추천 1번)');
+    }
+  } catch(e) {
+    showToast('카피 추천 실패: ' + e.message, true);
+  }
+}
+
+async function generateHashtags() {
+  const keyword = document.getElementById('hashKeyword').value;
+  if (!keyword) { showToast('키워드를 입력하세요.', true); return; }
+  const count = parseInt(document.getElementById('hashCount').value);
+  const platform = document.getElementById('hashPlatform').value;
+  const platformMap = { instagram:'Instagram', tiktok:'TikTok', youtube:'YouTube' };
+
+  const resultEl = document.getElementById('hashResult');
+  resultEl.innerHTML = '<div class="gen-loading"><div class="spinner"></div>Gemini가 해시태그를 생성하고 있습니다...</div>';
+
+  const prompt = `당신은 한국 SNS 마케팅 해시태그 전문가입니다.
+
+아래 조건에 맞는 해시태그를 ${count}개 생성해주세요.
+
+[조건]
+- 키워드: ${keyword}
+- 플랫폼: ${platformMap[platform]}
+- 개수: ${count}개
+
+[요구사항]
+1. 인기 해시태그 (게시물 10만 이상급): 전체의 30%
+2. 중간 규모 해시태그 (게시물 1만~10만급): 전체의 40%
+3. 니치/롱테일 해시태그 (게시물 1만 미만급): 전체의 30%
+
+[출력 형식 - 반드시 아래 형식으로]
+=== 인기 해시태그 ===
+#태그1 #태그2 #태그3 ...
+
+=== 중간 규모 ===
+#태그1 #태그2 #태그3 ...
+
+=== 니치 해시태그 ===
+#태그1 #태그2 #태그3 ...
+
+=== 전체 복사용 ===
+#태그1 #태그2 #태그3 ... (전부 한 줄로)
+
+규칙:
+- 모든 해시태그는 #으로 시작
+- 한국어와 영어 해시태그 적절히 혼합
+- 실제 ${platformMap[platform]}에서 사용되는 트렌디한 태그 포함
+- 마크다운 서식 사용하지 말 것`;
+
+  try {
+    const result = await callGemini(prompt);
+    const sections = result.split(/===\s*/).filter(s => s.trim());
+
+    let html = `<div style="color:var(--accent);font-weight:700;margin-bottom:12px;">Gemini AI 생성 해시태그 | ${platformMap[platform]}</div>`;
+    const sectionColors = [
+      { label:'인기', color:'var(--accent2)' },
+      { label:'중간', color:'var(--primary-light)' },
+      { label:'니치', color:'var(--success)' },
+      { label:'전체 복사용', color:'var(--text)' }
+    ];
+    sections.forEach((s, i) => {
+      const lines = s.split('\n');
+      const title = lines[0].replace(/===$/,'').trim();
+      const body = lines.slice(1).join('\n').trim();
+      if (body) {
+        const sc = sectionColors[i] || sectionColors[0];
+        html += `<div style="background:var(--bg2);padding:14px;border-radius:8px;margin-bottom:12px;">
+<div style="font-weight:600;color:${sc.color};margin-bottom:8px;">${escapeHtml(title)}</div>
+<div style="line-height:2;word-break:break-all;">${escapeHtml(body)}</div>
+</div>`;
+      }
+    });
+    resultEl.innerHTML = html;
+    showToast('Gemini가 해시태그를 생성했습니다!');
+  } catch(e) {
+    resultEl.innerHTML = `<span style="color:var(--danger);">오류: ${escapeHtml(e.message)}</span><br><br><span style="color:var(--text3);">상단에서 Gemini API Key를 확인해주세요.</span>`;
+    showToast('해시태그 생성 실패', true);
+  }
+}
+
+// =================== CLIENTS ===================
+function renderClients() {
+  const search = (document.getElementById('clientSearch')?.value || '').toLowerCase();
+  const filtered = clients.filter(c => c.name.toLowerCase().includes(search) || c.industry.includes(search));
+  const grid = document.getElementById('clientGrid');
+  grid.innerHTML = filtered.map(c => {
+    const reqs = requests.filter(r => r.clientId === c.id);
+    const active = reqs.filter(r => r.status !== 'done').length;
+    return `<div class="client-card" onclick="openClientDetail(${c.id})">
+      <div class="client-header">
+        <div class="client-avatar" style="background:${c.color}">${c.name.substring(0,1)}</div>
+        <div><div class="client-name">${c.name}</div><div class="client-industry">${c.industry}</div></div>
+      </div>
+      <div class="client-stats">
+        <div class="client-stat"><div class="client-stat-val">${reqs.length}</div><div class="client-stat-label">전체 작업</div></div>
+        <div class="client-stat"><div class="client-stat-val" style="color:${active>0?'var(--warning)':'var(--success)'}">${active}</div><div class="client-stat-label">진행중</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function filterClients() { renderClients(); }
+
+function openClientModal() { openModal('clientModal'); }
+function addClient() {
+  const name = document.getElementById('clientName').value.trim();
+  if (!name) { showToast('클라이언트명을 입력하세요.'); return; }
+  clients.push({
+    id: nextId.client++,
+    name,
+    industry: document.getElementById('clientIndustry').value,
+    contact: document.getElementById('clientContact').value,
+    phone: document.getElementById('clientPhone').value,
+    memo: document.getElementById('clientMemo').value,
+    color: COLORS[clients.length % COLORS.length]
+  });
+  closeModal('clientModal');
+  showToast('클라이언트가 추가되었습니다!');
+  renderClients();
+  renderDashboard();
+}
+
+function openClientDetail(id) {
+  const c = clients.find(cl => cl.id === id);
+  if (!c) return;
+  const reqs = requests.filter(r => r.clientId === c.id);
+  document.getElementById('detailTitle').textContent = c.name;
+  document.getElementById('detailBody').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div><span style="color:var(--text3);font-size:12px;">업종</span><br><strong>${c.industry}</strong></div>
+      <div><span style="color:var(--text3);font-size:12px;">담당자</span><br><strong>${c.contact}</strong></div>
+      <div><span style="color:var(--text3);font-size:12px;">연락처</span><br><strong>${c.phone}</strong></div>
+      <div><span style="color:var(--text3);font-size:12px;">작업 수</span><br><strong>${reqs.length}건</strong></div>
+    </div>
+    <div><span style="color:var(--text3);font-size:12px;">메모</span>
+      <div style="background:var(--bg);padding:12px;border-radius:8px;margin-top:4px;">${c.memo || '없음'}</div>
+    </div>
+    <div style="margin-top:16px;"><span style="color:var(--text3);font-size:12px;">작업 이력</span></div>
+    <div class="req-list" style="margin-top:8px;">
+      ${reqs.map(r => reqItemHTML(r, c)).join('') || '<div style="color:var(--text3);padding:12px;">등록된 작업이 없습니다.</div>'}
+    </div>
+  `;
+  document.getElementById('detailFooter').innerHTML = `
+    <button class="btn btn-primary" onclick="closeModal('detailModal');openNewRequestModal()">새 요청 등록</button>
+    <button class="btn btn-accent" onclick="closeModal('detailModal');navigateTo('chatbot');quickChat('${c.name} 마케팅 전략을 짜줘')">AI 전략 요청</button>
+    <button class="btn btn-ghost" onclick="closeModal('detailModal')">닫기</button>
+  `;
+  openModal('detailModal');
+}
+
+// =================== CALENDAR ===================
+function renderCalendar() {
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
+  document.getElementById('calMonth').textContent = `${year}년 ${month + 1}월`;
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date(2026, 2, 5); // March 5, 2026
+
+  const labels = ['일','월','화','수','목','금','토'];
+  let html = labels.map(l => `<div class="cal-day-label">${l}</div>`).join('');
+
+  for (let i = 0; i < firstDay; i++) html += '<div class="cal-day empty"></div>';
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = year === today.getFullYear() && month === today.getMonth() && d === today.getDate();
+    const dayEvents = events.filter(e => e.date === dateStr);
+    html += `<div class="cal-day${isToday?' today':''}">
+      <div class="day-num">${d}</div>
+      ${dayEvents.map(e => `<div class="cal-event ev-${e.type}" title="${e.title}">${e.title}</div>`).join('')}
+    </div>`;
+  }
+  document.getElementById('calGrid').innerHTML = html;
+}
+function changeMonth(dir) {
+  currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + dir);
+  renderCalendar();
+}
+
+function openEventModal() { openModal('eventModal'); }
+function addEvent() {
+  const title = document.getElementById('eventTitle').value.trim();
+  const date = document.getElementById('eventDate').value;
+  if (!title || !date) { showToast('제목과 날짜를 입력하세요.'); return; }
+  events.push({ id: nextId.event++, title, date, type: document.getElementById('eventType').value });
+  closeModal('eventModal');
+  showToast('일정이 추가되었습니다!');
+  renderCalendar();
+}
+
+// =================== UTILITY ===================
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+function showToast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+function copyResult(id) {
+  const text = document.getElementById(id).innerText;
+  navigator.clipboard.writeText(text).then(() => showToast('클립보드에 복사되었습니다!'));
+}
+function exportData() {
+  const data = { clients, requests, events, exported: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'ad-studio-backup.json'; a.click();
+  showToast('데이터가 내보내졌습니다!');
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('show'); });
+});
+
+// Init
+renderDashboard();
+
+// Restore API key from localStorage
+const savedKey = localStorage.getItem('gemini_api_key');
+if (savedKey) {
+  document.getElementById('geminiApiKey').value = savedKey;
+  checkApiKey();
+}
+document.getElementById('geminiApiKey').addEventListener('change', function() {
+  if (this.value.trim()) localStorage.setItem('gemini_api_key', this.value.trim());
+  else localStorage.removeItem('gemini_api_key');
+});
+</script>
+</body>
+</html>
