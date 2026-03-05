@@ -197,11 +197,9 @@ body { font-family: 'Segoe UI','Apple SD Gothic Neo',sans-serif; background:var(
 .modal-body { padding:24px; }
 .modal-footer { padding:16px 24px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:10px; }
 
-/* Banner Preview */
-.banner-preview { width:100%; aspect-ratio:16/9; border-radius:var(--radius); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:40px; position:relative; overflow:hidden; margin-top:16px; }
-.banner-preview h2 { font-size:28px; font-weight:800; margin-bottom:8px; text-shadow:0 2px 8px rgba(0,0,0,0.3); }
-.banner-preview p { font-size:16px; opacity:.9; }
-.banner-preview .banner-cta { margin-top:16px; padding:10px 28px; border-radius:24px; font-weight:700; font-size:14px; border:none; cursor:pointer; }
+/* AI Generated Images */
+.gen-result img { transition:transform .3s; cursor:pointer; }
+.gen-result img:hover { transform:scale(1.02); }
 
 /* Toast */
 .toast { position:fixed; bottom:24px; right:24px; background:var(--success); color:#fff; padding:14px 22px; border-radius:10px; font-size:14px; font-weight:600; z-index:2000; transform:translateY(80px); opacity:0; transition:all .3s; }
@@ -394,7 +392,8 @@ body { font-family: 'Segoe UI','Apple SD Gothic Neo',sans-serif; background:var(
       <div class="gen-tabs">
         <button class="gen-tab active" data-gen="copy">SNS 카피</button>
         <button class="gen-tab" data-gen="strategy">광고 전략</button>
-        <button class="gen-tab" data-gen="banner">배너 디자인</button>
+        <button class="gen-tab" data-gen="banner">AI 배너</button>
+        <button class="gen-tab" data-gen="promo">AI 홍보물</button>
         <button class="gen-tab" data-gen="hashtag">해시태그</button>
       </div>
 
@@ -518,51 +517,145 @@ body { font-family: 'Segoe UI','Apple SD Gothic Neo',sans-serif; background:var(
         </div>
       </div>
 
-      <!-- Banner Generator -->
+      <!-- AI Banner Generator -->
       <div class="gen-panel" id="gen-banner">
         <div class="grid-2">
           <div>
             <div class="form-group">
-              <label class="form-label">배너 크기</label>
-              <select class="form-select" id="bannerSize">
-                <option value="16:9">가로형 (16:9)</option>
-                <option value="1:1">정사각형 (1:1)</option>
-                <option value="9:16">세로형 (9:16 스토리)</option>
+              <label class="form-label">배너 유형</label>
+              <select class="form-select" id="bannerType">
+                <option value="sns-feed">SNS 피드 광고</option>
+                <option value="sns-story">SNS 스토리/릴스</option>
+                <option value="web-banner">웹 배너</option>
+                <option value="blog-thumb">블로그 썸네일</option>
+                <option value="youtube-thumb">유튜브 썸네일</option>
+                <option value="event">이벤트/프로모션</option>
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">배경 스타일</label>
-              <select class="form-select" id="bannerBg">
-                <option value="gradient1">퍼플 그라데이션</option>
-                <option value="gradient2">블루 그라데이션</option>
-                <option value="gradient3">오렌지 그라데이션</option>
-                <option value="gradient4">그린 그라데이션</option>
-                <option value="dark">다크</option>
-                <option value="light">라이트</option>
+              <label class="form-label">비율</label>
+              <select class="form-select" id="bannerRatio">
+                <option value="1:1">1:1 (정사각형)</option>
+                <option value="16:9">16:9 (가로형)</option>
+                <option value="9:16">9:16 (세로/스토리)</option>
+                <option value="4:3">4:3</option>
+                <option value="3:4">3:4</option>
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">메인 카피</label>
-              <input class="form-input" id="bannerTitle" placeholder="예: 여름 세일 최대 50% OFF">
+              <label class="form-label">디자인 스타일</label>
+              <select class="form-select" id="bannerStyle">
+                <option value="modern-minimal">모던 미니멀</option>
+                <option value="colorful-pop">컬러풀 팝</option>
+                <option value="luxury-elegant">럭셔리 엘레건트</option>
+                <option value="cute-friendly">귀엽고 친근한</option>
+                <option value="retro-vintage">레트로 빈티지</option>
+                <option value="nature-organic">내추럴 오가닉</option>
+                <option value="tech-futuristic">테크 미래지향적</option>
+                <option value="photorealistic">포토리얼리스틱</option>
+              </select>
             </div>
             <div class="form-group">
-              <label class="form-label">서브 카피</label>
-              <input class="form-input" id="bannerSub" placeholder="예: 7월 한 달간 진행">
+              <label class="form-label">배너에 들어갈 내용 설명</label>
+              <textarea class="form-textarea" id="bannerDesc" rows="3" placeholder="예: 카페 봄 시즌 딸기 라떼 신메뉴 출시 배너. 핑크톤 배경에 딸기 라떼 음료가 중앙에 있고, '봄의 달콤함' 텍스트"></textarea>
             </div>
             <div class="form-group">
-              <label class="form-label">CTA 버튼 텍스트</label>
-              <input class="form-input" id="bannerCta" placeholder="예: 지금 구매하기" value="지금 확인하기">
+              <label class="form-label">포함할 텍스트 (선택)</label>
+              <input class="form-input" id="bannerText" placeholder="예: SPRING SALE 50% OFF">
             </div>
-            <button class="btn btn-accent btn-sm" style="width:100%;margin-bottom:8px" onclick="suggestBannerCopy()">AI 카피 추천받기</button>
-            <button class="btn btn-primary btn-lg" style="width:100%" onclick="generateBanner()">배너 생성하기</button>
-            <button class="btn btn-ghost btn-lg" style="width:100%;margin-top:8px" onclick="downloadBanner()">이미지로 저장</button>
+            <div class="form-group">
+              <label class="form-label">컬러 톤 (선택)</label>
+              <input class="form-input" id="bannerColor" placeholder="예: 핑크, 화이트 / 네이비, 골드">
+            </div>
+            <button class="btn btn-primary btn-lg" style="width:100%" onclick="generateAIBanner()">AI 배너 생성하기</button>
+            <div style="margin-top:12px;display:flex;gap:8px;">
+              <button class="btn btn-ghost btn-sm" style="flex:1" onclick="downloadAIImage('bannerCanvas')">이미지 저장</button>
+              <button class="btn btn-ghost btn-sm" style="flex:1" onclick="regenerateAIBanner()">다시 생성</button>
+            </div>
           </div>
           <div>
-            <div class="gen-result-header"><span style="font-weight:700;">배너 미리보기</span></div>
-            <div class="banner-preview" id="bannerPreview" style="background:linear-gradient(135deg,#6C5CE7,#A29BFE);">
-              <h2>여기에 메인 카피가 표시됩니다</h2>
-              <p>서브 카피</p>
-              <button class="banner-cta" style="background:#fff;color:#6C5CE7;">지금 확인하기</button>
+            <div class="gen-result-header">
+              <span style="font-weight:700;">AI 생성 결과</span>
+              <span style="font-size:11px;color:var(--text3);">Gemini Image Generation</span>
+            </div>
+            <div class="gen-result" id="bannerResult" style="min-height:300px;display:flex;align-items:center;justify-content:center;padding:12px;">
+              <div style="text-align:center;color:var(--text3);">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:12px;opacity:0.5;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                <br>옵션을 설정하고 'AI 배너 생성하기'를 클릭하세요.
+                <br><span style="font-size:11px;">Gemini가 직접 이미지를 생성합니다.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Promo Material Generator -->
+      <div class="gen-panel" id="gen-promo">
+        <div class="grid-2">
+          <div>
+            <div class="form-group">
+              <label class="form-label">홍보물 유형</label>
+              <select class="form-select" id="promoType">
+                <option value="poster">포스터</option>
+                <option value="flyer">전단지/리플렛</option>
+                <option value="card-news">카드뉴스 (1장)</option>
+                <option value="menu">메뉴판/가격표</option>
+                <option value="logo">로고/심볼</option>
+                <option value="namecard">명함 디자인</option>
+                <option value="packaging">패키지/라벨</option>
+                <option value="social-profile">SNS 프로필 이미지</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">비율</label>
+              <select class="form-select" id="promoRatio">
+                <option value="1:1">1:1 (정사각형)</option>
+                <option value="3:4">3:4 (세로)</option>
+                <option value="4:3">4:3 (가로)</option>
+                <option value="16:9">16:9 (와이드)</option>
+                <option value="9:16">9:16 (세로 긴)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">디자인 스타일</label>
+              <select class="form-select" id="promoStyle">
+                <option value="professional">프로페셔널/비즈니스</option>
+                <option value="creative">크리에이티브/아트</option>
+                <option value="minimal">미니멀/클린</option>
+                <option value="playful">플레이풀/재미</option>
+                <option value="premium">프리미엄/하이엔드</option>
+                <option value="warm">따뜻한/감성적</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">상세 요청사항</label>
+              <textarea class="form-textarea" id="promoDesc" rows="4" placeholder="예: 뷰티 브랜드 '글로우'의 신제품 세럼 포스터. 고급스러운 골드+블랙 톤. 중앙에 세럼 병, 주변에 빛나는 파티클 효과. '새로운 광채의 시작' 텍스트 포함."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">브랜드명 (선택)</label>
+              <input class="form-input" id="promoBrand" placeholder="예: Glow Beauty">
+            </div>
+            <div class="form-group">
+              <label class="form-label">색상 키워드 (선택)</label>
+              <input class="form-input" id="promoColor" placeholder="예: 골드, 블랙, 화이트">
+            </div>
+            <button class="btn btn-primary btn-lg" style="width:100%" onclick="generateAIPromo()">AI 홍보물 생성하기</button>
+            <div style="margin-top:12px;display:flex;gap:8px;">
+              <button class="btn btn-ghost btn-sm" style="flex:1" onclick="downloadAIImage('promoCanvas')">이미지 저장</button>
+              <button class="btn btn-ghost btn-sm" style="flex:1" onclick="regenerateAIPromo()">다시 생성</button>
+            </div>
+          </div>
+          <div>
+            <div class="gen-result-header">
+              <span style="font-weight:700;">AI 생성 결과</span>
+              <span style="font-size:11px;color:var(--text3);">Gemini Image Generation</span>
+            </div>
+            <div class="gen-result" id="promoResult" style="min-height:300px;display:flex;align-items:center;justify-content:center;padding:12px;">
+              <div style="text-align:center;color:var(--text3);">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:12px;opacity:0.5;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                <br>요청사항을 입력하고 'AI 홍보물 생성하기'를 클릭하세요.
+                <br><span style="font-size:11px;">Gemini가 직접 디자인을 생성합니다.</span>
+              </div>
             </div>
           </div>
         </div>
@@ -1240,85 +1333,170 @@ ${sections.map(s => `<div style="background:var(--bg2);padding:14px;border-radiu
   }
 }
 
-function generateBanner() {
-  const size = document.getElementById('bannerSize').value;
-  const bg = document.getElementById('bannerBg').value;
-  const title = document.getElementById('bannerTitle').value || '메인 카피를 입력하세요';
-  const sub = document.getElementById('bannerSub').value || '';
-  const cta = document.getElementById('bannerCta').value || '자세히 보기';
+// =================== AI IMAGE GENERATION ===================
+const IMG_MODEL = 'gemini-2.5-flash-preview-image-generation';
 
-  const bgStyles = {
-    gradient1: 'linear-gradient(135deg, #6C5CE7, #A29BFE)',
-    gradient2: 'linear-gradient(135deg, #0984E3, #74B9FF)',
-    gradient3: 'linear-gradient(135deg, #E17055, #FDCB6E)',
-    gradient4: 'linear-gradient(135deg, #00B894, #00CEC9)',
-    dark: 'linear-gradient(135deg, #2D3436, #636E72)',
-    light: 'linear-gradient(135deg, #DFE6E9, #FFFFFF)'
-  };
-  const ctaColors = {
-    gradient1: { bg:'#fff', color:'#6C5CE7' },
-    gradient2: { bg:'#fff', color:'#0984E3' },
-    gradient3: { bg:'#fff', color:'#E17055' },
-    gradient4: { bg:'#fff', color:'#00B894' },
-    dark: { bg:'#fff', color:'#2D3436' },
-    light: { bg:'#2D3436', color:'#fff' }
-  };
-  const textColor = bg === 'light' ? '#2D3436' : '#fff';
-  const ar = { '16:9':'16/9', '1:1':'1/1', '9:16':'9/16' };
-  const cc = ctaColors[bg];
+async function callGeminiImage(prompt, aspectRatio) {
+  const key = getApiKey();
+  if (!key) throw new Error('API Key가 필요합니다.');
 
-  const preview = document.getElementById('bannerPreview');
-  preview.style.background = bgStyles[bg];
-  preview.style.aspectRatio = ar[size];
-  preview.style.color = textColor;
-  preview.innerHTML = `<h2 style="font-size:${size==='9:16'?'22px':'28px'};margin-bottom:8px;text-shadow:0 2px 8px rgba(0,0,0,0.2);">${escapeHtml(title)}</h2>
-    <p style="font-size:${size==='9:16'?'13px':'16px'};opacity:.85;">${escapeHtml(sub)}</p>
-    <button class="banner-cta" style="background:${cc.bg};color:${cc.color};margin-top:16px;padding:10px 28px;border-radius:24px;font-weight:700;font-size:14px;border:none;">${escapeHtml(cta)}</button>`;
-  showToast('배너가 생성되었습니다!');
+  const body = {
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: {
+      responseModalities: ['TEXT', 'IMAGE'],
+      imageConfig: { aspectRatio: aspectRatio || '1:1' }
+    }
+  };
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${IMG_MODEL}:generateContent?key=${encodeURIComponent(key)}`,
+    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || `HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  const parts = data.candidates?.[0]?.content?.parts || [];
+  let imageData = null, textData = '';
+  for (const part of parts) {
+    if (part.inlineData) imageData = part.inlineData;
+    if (part.text) textData += part.text;
+  }
+  return { imageData, textData };
 }
 
-function downloadBanner() {
-  showToast('HTML 배너를 클립보드에 복사합니다.');
-  const preview = document.getElementById('bannerPreview');
-  const html = `<!DOCTYPE html><html><body style="margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;">${preview.outerHTML}</body></html>`;
-  navigator.clipboard.writeText(html).then(() => showToast('배너 HTML이 복사되었습니다!'));
+function renderAIImage(containerId, imageData, textData) {
+  const el = document.getElementById(containerId);
+  if (imageData) {
+    el.innerHTML = `
+      <div style="width:100%;text-align:center;">
+        <img id="${containerId}Img" src="data:${imageData.mimeType};base64,${imageData.data}"
+             style="max-width:100%;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);" />
+        ${textData ? `<div style="margin-top:12px;padding:10px;background:var(--bg2);border-radius:8px;font-size:13px;color:var(--text2);text-align:left;white-space:pre-wrap;">${escapeHtml(textData)}</div>` : ''}
+      </div>`;
+  } else {
+    el.innerHTML = `<div style="color:var(--danger);text-align:center;padding:20px;">이미지를 생성하지 못했습니다.<br>${textData ? `<br><div style="color:var(--text3);font-size:13px;">${escapeHtml(textData)}</div>` : ''}</div>`;
+  }
 }
 
-async function suggestBannerCopy() {
-  const bg = document.getElementById('bannerBg').value;
-  const bgNames = { gradient1:'퍼플', gradient2:'블루', gradient3:'오렌지', gradient4:'그린', dark:'다크', light:'라이트' };
-  const prompt = `배너 광고의 메인 카피, 서브 카피, CTA 버튼 텍스트를 3세트 추천해주세요.
+function downloadAIImage(containerId) {
+  const img = document.getElementById(containerId + 'Img');
+  if (!img) { showToast('먼저 이미지를 생성해주세요.', true); return; }
+  const a = document.createElement('a');
+  a.href = img.src;
+  a.download = `ad-studio-${containerId}-${Date.now()}.png`;
+  a.click();
+  showToast('이미지가 저장되었습니다!');
+}
 
-배경 스타일: ${bgNames[bg]} 그라데이션
+let lastBannerPrompt = '';
+async function generateAIBanner() {
+  const type = document.getElementById('bannerType').value;
+  const ratio = document.getElementById('bannerRatio').value;
+  const style = document.getElementById('bannerStyle').value;
+  const desc = document.getElementById('bannerDesc').value;
+  const text = document.getElementById('bannerText').value;
+  const color = document.getElementById('bannerColor').value;
 
-출력 형식 (정확히 이 형식으로):
-1. 메인: (텍스트) | 서브: (텍스트) | CTA: (텍스트)
-2. 메인: (텍스트) | 서브: (텍스트) | CTA: (텍스트)
-3. 메인: (텍스트) | 서브: (텍스트) | CTA: (텍스트)
+  if (!desc) { showToast('배너 내용 설명을 입력해주세요.', true); return; }
 
-규칙:
-- 메인 카피는 15자 이내로 임팩트있게
-- 서브 카피는 20자 이내
-- CTA는 8자 이내
-- 마크다운 서식 사용하지 말 것`;
+  const typeMap = { 'sns-feed':'SNS 피드 광고 배너', 'sns-story':'SNS 스토리/릴스 광고', 'web-banner':'웹사이트 광고 배너', 'blog-thumb':'블로그 대표 썸네일', 'youtube-thumb':'유튜브 영상 썸네일', 'event':'이벤트/프로모션 배너' };
+  const styleMap = { 'modern-minimal':'modern minimalist clean design', 'colorful-pop':'colorful vibrant pop art style', 'luxury-elegant':'luxury elegant premium design with gold accents', 'cute-friendly':'cute kawaii friendly illustration style', 'retro-vintage':'retro vintage nostalgic design', 'nature-organic':'natural organic earthy tones', 'tech-futuristic':'futuristic tech neon cyber design', 'photorealistic':'photorealistic high quality photography' };
+
+  const resultEl = document.getElementById('bannerResult');
+  resultEl.innerHTML = '<div class="gen-loading"><div class="spinner"></div>Gemini가 배너를 디자인하고 있습니다... (10~30초 소요)</div>';
+
+  lastBannerPrompt = `Create a professional ${typeMap[type]} design.
+
+Style: ${styleMap[style]}
+Description: ${desc}
+${text ? 'Include this text in the design: "' + text + '"' : ''}
+${color ? 'Color palette: ' + color : ''}
+
+Requirements:
+- Professional advertising quality
+- Clean layout with clear visual hierarchy
+- Eye-catching and suitable for ${typeMap[type]}
+- Text should be legible and well-placed
+- High quality, ready to use as actual advertisement`;
 
   try {
-    showToast('AI가 카피를 추천 중...');
-    const result = await callGemini(prompt);
-    const lines = result.split('\n').filter(l => l.match(/메인:/));
-    if (lines.length > 0) {
-      const first = lines[0];
-      const main = first.match(/메인:\s*(.+?)\s*\|/)?.[1] || '';
-      const sub = first.match(/서브:\s*(.+?)\s*\|/)?.[1] || '';
-      const cta = first.match(/CTA:\s*(.+?)$/)?.[1] || '';
-      document.getElementById('bannerTitle').value = main.trim();
-      document.getElementById('bannerSub').value = sub.trim();
-      document.getElementById('bannerCta').value = cta.trim();
-      generateBanner();
-      showToast('AI 추천 카피가 적용되었습니다! (추천 1번)');
-    }
+    const { imageData, textData } = await callGeminiImage(lastBannerPrompt, ratio);
+    renderAIImage('bannerResult', imageData, textData);
+    showToast('AI 배너가 생성되었습니다!');
   } catch(e) {
-    showToast('카피 추천 실패: ' + e.message, true);
+    resultEl.innerHTML = `<div style="text-align:center;padding:20px;"><span style="color:var(--danger);">생성 실패: ${escapeHtml(e.message)}</span><br><br><span style="color:var(--text3);font-size:13px;">Gemini API Key를 확인하거나 다시 시도해주세요.</span></div>`;
+    showToast('배너 생성 실패', true);
+  }
+}
+
+async function regenerateAIBanner() {
+  if (!lastBannerPrompt) { showToast('먼저 배너를 생성해주세요.', true); return; }
+  const ratio = document.getElementById('bannerRatio').value;
+  const resultEl = document.getElementById('bannerResult');
+  resultEl.innerHTML = '<div class="gen-loading"><div class="spinner"></div>다른 버전으로 다시 생성 중...</div>';
+  try {
+    const { imageData, textData } = await callGeminiImage(lastBannerPrompt + '\n\nCreate a different variation from the previous one.', ratio);
+    renderAIImage('bannerResult', imageData, textData);
+    showToast('새로운 버전이 생성되었습니다!');
+  } catch(e) {
+    resultEl.innerHTML = `<div style="text-align:center;padding:20px;color:var(--danger);">재생성 실패: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+let lastPromoPrompt = '';
+async function generateAIPromo() {
+  const type = document.getElementById('promoType').value;
+  const ratio = document.getElementById('promoRatio').value;
+  const style = document.getElementById('promoStyle').value;
+  const desc = document.getElementById('promoDesc').value;
+  const brand = document.getElementById('promoBrand').value;
+  const color = document.getElementById('promoColor').value;
+
+  if (!desc) { showToast('상세 요청사항을 입력해주세요.', true); return; }
+
+  const typeMap = { poster:'advertising poster', flyer:'promotional flyer/leaflet', 'card-news':'social media card news infographic', menu:'menu/price list design', logo:'brand logo/symbol', namecard:'business card design', packaging:'product packaging/label design', 'social-profile':'social media profile image' };
+  const styleMap = { professional:'professional corporate business style', creative:'creative artistic avant-garde style', minimal:'minimalist clean modern style', playful:'playful fun colorful style', premium:'premium high-end luxury style', warm:'warm cozy emotional style' };
+
+  const resultEl = document.getElementById('promoResult');
+  resultEl.innerHTML = '<div class="gen-loading"><div class="spinner"></div>Gemini가 홍보물을 디자인하고 있습니다... (10~30초 소요)</div>';
+
+  lastPromoPrompt = `Create a professional ${typeMap[type]} design.
+
+Design style: ${styleMap[style]}
+Description: ${desc}
+${brand ? 'Brand name: ' + brand : ''}
+${color ? 'Color scheme: ' + color : ''}
+
+Requirements:
+- Professional print/digital quality design
+- Clear visual hierarchy and composition
+- Suitable for actual commercial use as ${typeMap[type]}
+- Any text should be legible and well-designed
+- High quality, polished, ready for production`;
+
+  try {
+    const { imageData, textData } = await callGeminiImage(lastPromoPrompt, ratio);
+    renderAIImage('promoResult', imageData, textData);
+    showToast('AI 홍보물이 생성되었습니다!');
+  } catch(e) {
+    resultEl.innerHTML = `<div style="text-align:center;padding:20px;"><span style="color:var(--danger);">생성 실패: ${escapeHtml(e.message)}</span><br><br><span style="color:var(--text3);font-size:13px;">Gemini API Key를 확인하거나 다시 시도해주세요.</span></div>`;
+    showToast('홍보물 생성 실패', true);
+  }
+}
+
+async function regenerateAIPromo() {
+  if (!lastPromoPrompt) { showToast('먼저 홍보물을 생성해주세요.', true); return; }
+  const ratio = document.getElementById('promoRatio').value;
+  const resultEl = document.getElementById('promoResult');
+  resultEl.innerHTML = '<div class="gen-loading"><div class="spinner"></div>다른 버전으로 다시 생성 중...</div>';
+  try {
+    const { imageData, textData } = await callGeminiImage(lastPromoPrompt + '\n\nCreate a completely different design variation.', ratio);
+    renderAIImage('promoResult', imageData, textData);
+    showToast('새로운 버전이 생성되었습니다!');
+  } catch(e) {
+    resultEl.innerHTML = `<div style="text-align:center;padding:20px;color:var(--danger);">재생성 실패: ${escapeHtml(e.message)}</div>`;
   }
 }
 
