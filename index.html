@@ -1372,8 +1372,9 @@ ${sections.map(s => `<div style="background:var(--bg2);padding:14px;border-radiu
 // =================== AI IMAGE GENERATION ===================
 // Gemini image generation models (fallback chain)
 const IMG_MODELS = [
-  'gemini-2.5-flash-preview-image-generation',
-  'gemini-2.0-flash-exp'
+  'gemini-2.5-flash-image',
+  'gemini-3.1-flash-image-preview',
+  'gemini-3-pro-image-preview'
 ];
 
 // Uploaded reference images store: { banner: [{base64, mimeType}], promo: [...] }
